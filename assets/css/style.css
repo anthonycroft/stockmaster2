@@ -1,0 +1,232 @@
+
+.jumbotron {
+  padding-top: 0 0 !important;
+}
+
+.gainers {
+  display: inline-block !important;
+}
+
+#viz {
+  width: 100%;
+  /* text-align: center; */
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 0;
+}
+
+input[type="text"]  {
+  /* Your CSS styles here */
+  font-size: 1rem;
+}
+
+input[type="number"]  {
+  /* Your CSS styles here */
+  font-size: 1rem;
+}
+
+.input-group-text  {
+  /* Your CSS styles here */
+  font-size: 1rem;
+}
+
+.display-4, .lead {
+  text-align: center;
+}
+
+.input-heading {
+  font-weight: bold;
+}
+
+.portfolio-retrieval {
+  justify-self: end;
+}
+
+.inline-h4 {
+  display: inline;
+}
+
+.portfolio_header {
+  align-self: flex-end;
+}
+
+h4 span {
+  font-size: 2rem;
+  color:blue;
+}
+
+.col {
+  height: 60px;
+  background-color: rgb(10, 59, 88);
+  color: white;
+  font-weight: bold;
+  flex-basis: 0;
+  flex-grow: 1;
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+}
+
+.flex-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.row-stocks {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
+}
+
+.row-stocks.totals {
+  border-bottom: #333 1px solid;
+  border-top: #333 1px solid;
+  font-size: large;
+  color: rgb(60, 60, 64);
+  background-color: #ebecf6;
+  height: 4rem;
+  font-weight: bold;
+}
+
+.col-stocks, .col-totals{
+  height: 20px;
+  font-weight: bold;
+  flex-basis: 0;
+  flex-grow: 1;
+  padding: 5px;
+  display: flex;
+  justify-content: end;
+  text-align: left;
+}
+
+.ticker {
+  justify-content: start;
+  color: blue;
+  padding-left: 5px;
+}
+
+
+/*heatmap*/
+
+.heat-map {
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.heat-map td {
+  /* width: 30px; */
+  height: 30px;
+  border: 1px solid gray;
+}
+
+/*news*/
+
+.news-container {
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.news-item {
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.news-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.news-author {
+  margin-top: 5px;
+  font-size: 14px;
+  color: #777;
+}
+
+.news-source {
+  margin-top: 5px;
+  font-size: 14px;
+  color: #777;
+}
+
+.news-date {
+  margin-top: 5px;
+  font-size: 14px;
+  color: #777;
+}
+
+.news-link {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 14px;
+  color: #007bff;
+  text-decoration: none;
+  border-bottom: 1px solid #007bff;
+  transition: border-bottom 0.2s ease;
+}
+
+.news-link:hover {
+  border-bottom: 2px solid #007bff;
+}
+
+
+.col-stocks.gainloss span {
+  color: black;
+}
+.col-stocks.gainlossperc span {
+  color: black;
+}
+
+.col-stocks.gainloss span.negative {
+  color: red;
+}
+.col-stocks.gainlossperc span.negative {
+  color: red;
+}
+
+.row-stocks:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+@media (max-width: 768px) {
+  /* styles for small screens */
+  .col {
+    font-size: 0.6rem;
+  }
+
+  .col-totals {
+    font-size: 0.8rem;
+  }
+
+  .col-stocks {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  #viz {
+    display: none;
+  }
+}
+
+
+
