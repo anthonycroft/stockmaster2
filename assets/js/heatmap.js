@@ -1,127 +1,47 @@
+// 30-day performance heatmap. Uses the same cached getHistory() call as the
+// sparklines, so it costs no extra API requests. Laid out with CSS grid so it
+// reflows from 6 columns on desktop down to 3 on a phone.
 
-var dateEnd = moment().subtract(1, 'days').format('YYYY-MM-DD')
-var dateStart = moment(dateEnd).subtract(30, 'days').format('YYYY-MM-DD')
-
-const width = 6;
-const height = Math.ceil(stocks.length / width);
-
-stocks = ["AAPL", "AXP", "BA", "CAT", "CRM", "CSCO", "CVX", "DIS", "DOW", "GS", 
-"HD", "HON", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", 
-"NKE", "PG", "TRV", "UNH", "V", "VZ", "WBA", "WMT", "XOM"
-]
-
-const colorScale = {
-  "-1.0": "#FFD3D3", 
-  "-0.05": "#FF8D8D", 
-  "0.0": "#FFFFFF",  
-  "0.05": "#B4F7B4", 
-  "1.0": "#4EC64E"   
-};
-
-const promises = [];
-
-  stocks.forEach(symbol => {
-    const url = `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/${dateStart}/${dateEnd}?apiKey=7p8pLHEtbHWAcDB5wPeMpcoNiHTQw4Am`;
-    promises.push($.get(url));
-  });
-  
-  let stockData; 
-  
-  Promise.all(promises)
-    .then(responses => {
-  
-      stockData = responses.map(response => response.results); 
-      const prices = stockData.map(data => data.map(d => d.c));
-      const maxPrice = Math.max(...prices.flat());
-      const minPrice = Math.min(...prices.flat());
-  
-      const heatmapTable = document.querySelector('.heat-map');
-  
-      for (let i = 0; i < height; i++) {
-        const row = heatmapTable.insertRow();
-        
-        for (let j = 0; j < width; j++) {
-          const index = i * width + j;
-          if (index >= stocks.length) {
-            break;
-          }
-  
-          const cell = row.insertCell();
-          const priceData = stockData[index].map(d => d.c);
-          const firstPrice = priceData[0];
-          const lastPrice = priceData[priceData.length - 1];
-          const percentChange = (lastPrice - firstPrice) / firstPrice;
-          
-          let colorIndex;
-          
-          if (percentChange <= -0.05) {
-            colorIndex = "-0.05";
-          } else if (percentChange <= -0.01) {
-            colorIndex = "-1.0";
-          } else if (percentChange <= 0.01) {
-            colorIndex = "0.0";
-          } else if (percentChange <= 0.05) {
-            colorIndex = "0.05";
-          } else {
-            colorIndex = "1.0";
-          }
-  
-          cell.style.backgroundColor = colorScale[colorIndex];
-        }
-      }
-      // Call callHeatMap() after the heatmap cells have been created
-      callHeatMap()
-    })
-    .catch(error => console.error(error));
-
-function callHeatMap() {
-
-  const heatmap = document.querySelector('.heat-map');
-  const rows = heatmap.querySelectorAll('tr');
-  const cells = heatmap.querySelectorAll('td');
-
-  const cellWidth = heatmap.offsetWidth / width * 4;
-  const cellHeight = heatmap.offsetHeight / height * 3;
-
-  cells.forEach((cell, index) => {
-
-  const stockSymbol = stocks[index];
-  const stockSymbolElement = document.createElement('div');
-
-  stockSymbolElement.textContent = stockSymbol;
-  stockSymbolElement.style.fontSize = '20px';
-  stockSymbolElement.style.margin = 'auto';
-  stockSymbolElement.style.textAlign = 'center';
-
-  if (cell.firstChild) {
-    cell.removeChild(cell.firstChild);
-  }
-    
-  cell.appendChild(stockSymbolElement);
-  cell.setAttribute('title', stockSymbol);
-    
-  // cell.addEventListener('click', () => {
-  //   const yahooFinanceUrl = `https://finance.yahoo.com/quote/${stockSymbol}`;
-  //   window.open(yahooFinanceUrl, '_blank');
-  // });
-      
-  cell.style.width = `${cellWidth * 2}px`;
-  cell.style.height = `${cellHeight}px`;
-    
-  });
-    
-  rows.forEach(row => {
-  row.style.height = `${cellHeight}px`;
-  });
-
+function heatColour(change) {
+  if (change <= -0.05) return "#e5534b";
+  if (change <= -0.01) return "#f4a3a0";
+  if (change < 0.01) return "#f2f2f2";
+  if (change < 0.05) return "#9fdc9f";
+  return "#3fa63f";
 }
 
+async function drawHeatmap(tickers) {
+  const grid = document.querySelector(".heat-map");
+  if (!grid) return;
+  grid.innerHTML = "";
 
+  let history;
+  try {
+    history = await getHistory(tickers);
+  } catch (err) {
+    console.error(err);
+    grid.innerHTML = '<p class="text-muted">Heatmap unavailable - prices could not be loaded.</p>';
+    return;
+  }
 
+  tickers.forEach(ticker => {
+    const rows = (history[ticker] || []).slice(-22);
+    const cell = document.createElement("a");
+    cell.className = "heat-cell";
+    cell.href = `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}`;
+    cell.target = "_blank";
+    cell.rel = "noopener";
 
-  // window.removeEventListener('load', callHeatMap);
-  // window.removeEventListener('resize', callHeatmap);
+    let label = "n/a";
+    if (rows.length >= 2) {
+      const change = (rows[rows.length - 1].close - rows[0].close) / rows[0].close;
+      cell.style.backgroundColor = heatColour(change);
+      if (Math.abs(change) >= 0.05) cell.classList.add("strong");
+      label = `${change >= 0 ? "+" : ""}${(change * 100).toFixed(1)}%`;
+    }
 
-
-  // window.addEventListener('load', callHeatMap);
-  // window.addEventListener('resize', callHeatmap);
+    cell.title = `${ticker}: ${label} over ~1 month`;
+    cell.innerHTML = `<span class="heat-ticker">${ticker}</span><span class="heat-change">${label}</span>`;
+    grid.appendChild(cell);
+  });
+}

@@ -1,326 +1,196 @@
-var apiKey = "7p8pLHEtbHWAcDB5wPeMpcoNiHTQw4Am";
-const proxyPortfolio = "DJ30"
+const proxyPortfolio = "DJ30";
 
-// var stocks;
+// ---------------------------------------------------------------------------
+// 30-day sparklines (drawn locally with D3 - no third-party image service)
+// ---------------------------------------------------------------------------
 
-function getURL(ticker) {
+function drawSparklines(history, tickers) {
+  const container = d3.select("#sparklines");
+  container.selectAll("*").remove();
 
-  // get stock prices for user's portfolio for the last 30 days for thumbnail image charts
-  var dateEnd = moment().subtract(1, 'days').format('YYYY-MM-DD')
-  var dateStart = moment(dateEnd).subtract(30, 'days').format('YYYY-MM-DD')
+  tickers.forEach(ticker => {
+    const rows = (history[ticker] || []).slice(-22); // ~1 month of trading days
+    const card = container.append("a")
+      .attr("class", "spark-card")
+      .attr("href", `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}`)
+      .attr("target", "_blank")
+      .attr("rel", "noopener")
+      .attr("title", ticker);
 
-  var queryURL = "https://api.polygon.io/v2/aggs/ticker/" + `${ticker}/range/1/day/${dateStart}/${dateEnd}?apiKey=${apiKey}`;
+    const head = card.append("div").attr("class", "spark-head");
+    head.append("span").attr("class", "spark-ticker").text(ticker);
 
-  return queryURL;
-}
-
-async function sendRequest (ticker, timeSeriesData) {
-  // Build the query URL for the ajax request to the polygon.io site
-
-  var stockURL = getURL(ticker);
-
-  var response = await fetch(stockURL)
-    var data = await response.json()
-
-  const prices = data.results.map(result => ({
-    timestamp: result.t,
-    closingPrice: result.c
-  }));
-  
-  // add the current stock prices to timeSeriesData 
-  // this is in a more convenient format for valuation and other purposes
-
-  data.results.forEach(result => {
-    let dataPoint = {
-      stock: data.ticker,
-      date: new Date(result.t),
-      price: result.c
-    };
-    // console.log("Stock is " + dataPoint.stock + " date is " + dataPoint.date + " and price is " + dataPoint.price)
-
-    timeSeriesData.push(dataPoint);
-  });
-
-  const timestamps = prices.map(price => price.timestamp);
-  const closingPrices = prices.map(price => price.closingPrice);
-
-  // call function to create the thumbnails
-  createImage(timestamps, closingPrices, ticker);
-
-  return timeSeriesData;
-}
-
-function createImage(timestamps,closingPrices, ticker) {
-
-  // convert unix style dates to standard display format
-  const formattedTimestamps = timestamps.map(timestamp => moment(timestamp).format('DD/MM/YYYY'));
-
-  objJSON = JSON.stringify({
-    type:'line',
-    data:{
-      labels: formattedTimestamps,
-      datasets:[
-        {
-          backgroundColor:'rgba(255,150,150,0.5)',
-          borderColor:'rgb(255,150,150)',
-          data: closingPrices,
-          label:'Dataset',
-          fill:'origin'
-        }
-      ]
-    },
-    options: {
-      indexAxis: 'y',
-      scales: {
-        x: {
-          beginAtZero: false
-        }
-      }
+    if (rows.length < 2) {
+      head.append("span").attr("class", "spark-change muted").text("n/a");
+      card.append("div").attr("class", "spark-empty").text("No data");
+      return;
     }
-  });
 
-  // send the API request to image-charts.com for the thumbnail image
-  imgURL = "https://image-charts.com/chart.js/2.8.0?bkg=white&c=" + objJSON;
+    const first = rows[0].close;
+    const last = rows[rows.length - 1].close;
+    const change = (last - first) / first;
+    const up = change >= 0;
 
-  $("<img>", {
-    src: imgURL,
-    width: "200",
-    height: "100",
-    id: "chtThumb_" + ticker,
-    class: "image",
-    // title: stocks[index]
-    title: ticker
- }).appendTo(".thumbnail");
+    head.append("span")
+      .attr("class", "spark-change " + (up ? "up" : "down"))
+      .text(`${up ? "+" : ""}${(change * 100).toFixed(1)}%`);
+    card.append("div").attr("class", "spark-price").text(last.toFixed(2));
 
-}
+    const w = 120, h = 36;
+    const x = d3.scaleLinear().domain([0, rows.length - 1]).range([1, w - 1]);
+    const y = d3.scaleLinear().domain(d3.extent(rows, r => r.close)).range([h - 2, 2]);
 
-function drawEquityCurve (valuations) {
-  // draws a D3.js chart representing investor's equity curve
-
-  const data = Object.entries(valuations).map(([date, value]) => {
-    return {date: new Date(date), equity: value};
-  });
-
-  let dim = {
-    "width": 1250,
-    "height": 450,
-    "margin": 50
-  }
-
-  let svg = d3.select('#viz')
-    .append('svg')
-      .attr("width", dim.width)
-      .attr("height", dim.height)
-      .attr("margin", dim.margin)
-
-  draw(data);
-
-  function draw(data) {
-      
-    let scaleX = d3.scaleTime()
-    .domain(d3.extent(data, function(d) {
-      return d.date;
-    }))
-    // .nice()
-    .range([dim.margin, dim.width-dim.margin]);
-
-    let axisX = d3.axisBottom(scaleX);
-
-    svg.append("g")
-      .attr("transform", `translate(0,${dim.height-dim.margin})`)
-      .call(axisX);
-    
-    let minVal = d3.min(data, d => d.equity);
-
-    let scaleY = d3.scaleLinear()
-    
-    .domain([minVal, d3.max(data, function(d) {
-      return d.equity;
-    })])
-    // .nice()
-    .range([dim.height - dim.margin, dim.margin]);
-
-    let axisY = d3.axisLeft(scaleY);
-
-    svg.append("g")
-      .attr("transform", `translate(${dim.margin},0)`)
-      .call(axisY);
-
-    let area = d3.area()
-      .x(d => scaleX(d.date))
-      .y0(d => scaleY(minVal))
-      .y1(d => scaleY(d.equity));;
+    const svg = card.append("svg")
+      .attr("viewBox", `0 0 ${w} ${h}`)
+      .attr("preserveAspectRatio", "none")
+      .attr("class", "spark-svg");
 
     svg.append("path")
-    .attr("fill", 'rgba(255,150,150,0.5)')
-    .attr("stroke", 'none')
-    .attr("stroke-width", '1px')
-    .attr("d", area(data));
+      .attr("class", up ? "spark-area up" : "spark-area down")
+      .attr("d", d3.area().x((d, i) => x(i)).y0(h).y1(d => y(d.close))(rows));
+    svg.append("path")
+      .attr("class", up ? "spark-line up" : "spark-line down")
+      .attr("d", d3.line().x((d, i) => x(i)).y(d => y(d.close))(rows));
+  });
+}
 
+// ---------------------------------------------------------------------------
+// Equity curve - responsive SVG (scales with its container via viewBox)
+// ---------------------------------------------------------------------------
+
+function drawEquityCurve(valuations) {
+  d3.select("#viz").selectAll("*").remove();
+
+  const data = Object.entries(valuations || {})
+    .map(([date, value]) => ({ date: moment(date, "YYYY-MM-DD").toDate(), equity: value }))
+    .sort((a, b) => a.date - b.date);
+
+  if (data.length < 2) {
+    d3.select("#viz").append("p").attr("class", "text-muted")
+      .text("Not enough price history in the last month to draw an equity curve yet.");
+    return;
   }
+
+  const dim = { width: 800, height: 320, top: 16, right: 16, bottom: 32, left: 64 };
+
+  const svg = d3.select("#viz").append("svg")
+    .attr("viewBox", `0 0 ${dim.width} ${dim.height}`)
+    .attr("class", "equity-svg");
+
+  const x = d3.scaleTime()
+    .domain(d3.extent(data, d => d.date))
+    .range([dim.left, dim.width - dim.right]);
+
+  const minVal = d3.min(data, d => d.equity);
+  const maxVal = d3.max(data, d => d.equity);
+  const pad = (maxVal - minVal) * 0.05 || maxVal * 0.01 || 1;
+  const y = d3.scaleLinear()
+    .domain([minVal - pad, maxVal + pad])
+    .range([dim.height - dim.bottom, dim.top]);
+
+  svg.append("g")
+    .attr("transform", `translate(0,${dim.height - dim.bottom})`)
+    .call(d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%d %b")));
+
+  svg.append("g")
+    .attr("transform", `translate(${dim.left},0)`)
+    .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(",.0f")));
+
+  svg.append("path")
+    .attr("class", "equity-area")
+    .attr("d", d3.area().x(d => x(d.date)).y0(y(minVal - pad)).y1(d => y(d.equity))(data));
+
+  svg.append("path")
+    .attr("class", "equity-line")
+    .attr("d", d3.line().x(d => x(d.date)).y(d => y(d.equity))(data));
+}
+
+// ---------------------------------------------------------------------------
+// Valuation
+// ---------------------------------------------------------------------------
+
+// Build {ticker: {dateKey: price}} for fast lookups.
+function indexPrices(timeSeriesData) {
+  const idx = {};
+  timeSeriesData.forEach(p => {
+    (idx[p.stock] = idx[p.stock] || {})[p.dateKey] = p.price;
+  });
+  return idx;
 }
 
 function getValuation(timeSeriesData, portfolioName) {
-  // here we want to create a valuation of the portfolio over the last 30 days for each day
-  var portfolio = {};
-
-  // issue: for each stock in the portfolio, was it owned at the valuation date ?
-  // for this we need to retrieve all the transactions for the particular portfolio
-  // and include only those in the valuation that fall on or after the valuation
-  // date.
-
-  let transactions = getPortfolioTransactions(portfolioName)
-
-  if (transactions === 'none' ) {
-    return 
+  // Value the portfolio on each trading day of the last month, counting only
+  // transactions made on or before that day.
+  const portfolio = {};
+  const transactions = getPortfolioTransactions(portfolioName);
+  if (!transactions || transactions === 'none') {
+    return portfolio;
   }
 
-  // Get the current date and the date 1 month ago
-  var now = new Date();
-  var oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  const prices = indexPrices(timeSeriesData);
+  const oneMonthAgo = moment().subtract(1, 'months').format('YYYY-MM-DD');
 
-  // Set the start date to the date 12 months ago
-  var startDate = oneMonthAgo;
+  // Trading days = dates for which we actually have prices
+  const tradingDays = [...new Set(timeSeriesData.map(p => p.dateKey))]
+    .filter(d => d >= oneMonthAgo)
+    .sort();
 
-  // Loop through each day and update the portfolio value
-  var yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  while (startDate < yesterday) {
-
-    if (isWeekend(startDate)) { 
-      startDate.setDate(startDate.getDate() + 1);
-      continue
-    }
-    
-    // Loop through the transactions and update the portfolio value for the current date
-    for (var i = 0; i < transactions.length; i++) {
-      var transaction = transactions[i];
-      var transactionDate = new Date(transaction.date);
-
-      // Only consider transactions that were made on or before the current date
-      if (transactionDate <= startDate) {
-
-        // Get the current value of the stock for the transaction date
-        var stockValue = getPrice(startDate, transaction.stock);
-        // if price is null assume exchange was closed, so dont add a vluation for this date.
-        if (stockValue !== null) {
-          // Update the portfolio value for the current date
-          if (portfolio[startDate.toISOString().substring(0, 10)] === undefined) {
-            // Initialize the portfolio value for the current date
-            portfolio[startDate.toISOString().substring(0, 10)] = 0;
-          }
-          portfolio[startDate.toISOString().substring(0, 10)] += transaction.quantity * stockValue;
+  tradingDays.forEach(day => {
+    let total = 0;
+    let priced = false;
+    transactions.forEach(t => {
+      if (t.date <= day) {
+        const price = (prices[t.stock] || {})[day];
+        if (price !== undefined) {
+          total += t.quantity * price;
+          priced = true;
         }
       }
-    }
-
-    // Increment the start date by one day
-    startDate.setDate(startDate.getDate() + 1);
-  }
-
-  function getPrice(date, ticker) {
-
-    var valuationDate = moment(date).format("YYYY-MM-DD")
-
-    let filteredData = timeSeriesData.filter(dataPoint => {
-      return moment(dataPoint.date).format("YYYY-MM-DD") === valuationDate &&
-             dataPoint.stock === ticker;
     });
-
-    if (filteredData.length > 0) {
-      return filteredData[0].price;
-    } else {
-      return null;
+    if (priced) {
+      portfolio[day] = total;
     }
-  }
-
-  // Log the portfolio value for each date
-  for (var date in portfolio) {
-    console.log(date + ": $" + portfolio[date]);
-  }
+  });
 
   return portfolio;
 }
 
 function getHoldings(portfolioName, timeSeriesData) {
-  // here we want to create a valuation of each stock
-  var stocks = {};
-
-  // issue: for each stock in the portfolio, was it owned at the valuation date ?
-  // for this we need to retrieve all the transactions for the particular portfolio
-  // and include only those in the valuation that fall on or after the valuation
-  // date.
-
-  let transactions = getPortfolioTransactions(portfolioName)
-
-  if (transactions === 'none' ) {
-    return 
+  // Units held, average cost and latest close for each stock in the portfolio
+  const stocks = {};
+  const transactions = getPortfolioTransactions(portfolioName);
+  if (!transactions || transactions === 'none') {
+    return stocks;
   }
 
-  // Loop through the transactions and update the portfolio value for the current date
-  for (var i = 0; i < transactions.length; i++) {
-    var transaction = transactions[i];
+  transactions.forEach(t => addStock(t.stock, t.price, t.quantity));
 
-    var stockName = transaction.stock;
-
-    // User Story: I want to go through my stock transactions and work out the average purchase price 
-    // of those stocks, and record that information alongside the ticker, current units held and
-    // current price (yesterday's closing price). I want to store all this infcormation in a single
-    // object for each ticker for easy retrieval later
-
-    // add the stock quantity bought or sold to running total
-    addStock(stockName, transaction.price, transaction.quantity)
-
-  }
-
-  function addStock(symbol, avgCost, quantity) {
-    // check if the stock already exists in the stocks object
+  function addStock(symbol, cost, quantity) {
     if (stocks[symbol]) {
-      // if it does, update its properties
-      stocks[symbol].avgCost = ((stocks[symbol].avgCost * stocks[symbol].quantity) + (avgCost * quantity)) / (stocks[symbol].quantity + quantity);
-      stocks[symbol].quantity += quantity;
+      const s = stocks[symbol];
+      const newQty = s.quantity + quantity;
+      if (newQty !== 0) {
+        s.avgCost = ((s.avgCost * s.quantity) + (cost * quantity)) / newQty;
+      }
+      s.quantity = newQty;
     } else {
-      // if it doesn't, create a new stock object and add it to the stocks object
-      stocks[symbol] = { name: symbol, avgCost: avgCost, quantity: quantity };
+      stocks[symbol] = { name: symbol, avgCost: cost, quantity: quantity };
     }
   }
 
-  // get yesterday's closing price and add to object
-  for (var symbol in stocks) {
-    var stock = stocks[symbol];
-    // console.log(stock.name + ": " + stock.avgCost + " (" + stock.quantity + ")");
-
-    // get yesterday's closing price
-    var yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const stockPrice = getPrice(yesterday, stock.name);
-  
-    // add the price to our array of stock objs for calculating performance
-    stocks[symbol].price = stockPrice;
-    // console.log("Stock: " + stocks[symbol].name + " Latest Price is " + stockPrice);
-  
-  }
-
-  return stocks
-
-  function getPrice(date, ticker) {
-    // fetches the price for a particular stock and date from timeSeriesData
-
-    var valuationDate = moment(date).format("YYYY-MM-DD")
-  
-    let filteredData = timeSeriesData.filter(dataPoint => {
-      return moment(dataPoint.date).format("YYYY-MM-DD") === valuationDate &&
-             dataPoint.stock === ticker;
-    });
-  
-    if (filteredData.length > 0) {
-      return filteredData[0].price;
-    } else {
-      return null;
+  // Latest available close (works on weekends and holidays too)
+  const latest = {};
+  timeSeriesData.forEach(p => {
+    if (!latest[p.stock] || p.dateKey > latest[p.stock].dateKey) {
+      latest[p.stock] = p;
     }
+  });
+
+  for (const symbol in stocks) {
+    stocks[symbol].price = latest[symbol] ? latest[symbol].price : null;
   }
 
+  return stocks;
 }
 
 function createHoldingsTable (holdings) {
@@ -345,7 +215,8 @@ function createHoldingsTable (holdings) {
     formattedAvgCost = formattedAvgCost.toLocaleString('en-US', options);
     formattedAvgCostTotal += (stock.avgCost * stock.quantity)
 
-    var formattedGainLoss = (stock.price * stock.quantity) -  (stock.avgCost * stock.quantity);
+    var gainLossRaw = (stock.price * stock.quantity) -  (stock.avgCost * stock.quantity);
+    var formattedGainLoss = gainLossRaw;
     formattedGainLoss = formattedGainLoss.toLocaleString('en-US', options);
     formattedGainLossTotal += ((stock.price * stock.quantity) -  (stock.avgCost * stock.quantity));
 
@@ -356,11 +227,11 @@ function createHoldingsTable (holdings) {
     const html = '<div class="row-stocks">' +
       '<div class="col-stocks ticker">' + stock.name + '</div>' +
       '<div class="col-stocks">' + stock.quantity + '</div>' +
-      '<div class="col-stocks">' + stock.price + '</div>' +
+      '<div class="col-stocks">' + (stock.price === null ? 'n/a' : stock.price.toLocaleString('en-US', options)) + '</div>' +
       '<div class="col-stocks">' + formattedValue + '</div>' +   // value
       '<div class="col-stocks">' + formattedAvgCost + '</div>' +
-      '<div class="col-stocks gainloss"><span class="">' + formattedGainLoss + '</span></div>' +
-      '<div class="col-stocks gainlossperc"><span class="">' + formattedGainLossPercent + '</span></div>' +
+      '<div class="col-stocks gainloss"><span class="' + (gainLossRaw < 0 ? 'negative' : '') + '">' + formattedGainLoss + '</span></div>' +
+      '<div class="col-stocks gainlossperc"><span class="' + (gainLossRaw < 0 ? 'negative' : '') + '">' + formattedGainLossPercent + '</span></div>' +
       '</div>';
 
     // Add the HTML code to the stocks table
@@ -377,7 +248,7 @@ function createHoldingsTable (holdings) {
   formattedGainLossPercentOverall = formattedGainLossPercentOverall.toLocaleString('en-US', options)
   $('#total-gain-loss-percentage').text(formattedGainLossPercentOverall);
 
-  colorNegativesRed();
+  $('#total-gain-loss, #total-gain-loss-percentage').toggleClass('negative', formattedGainLossTotal < 0);
 
   function colorNegativesRed() {
     // changes negative values in holdings table to red
@@ -447,78 +318,51 @@ function getPortfolioTransactions(portfolioName) {
 }
 
 async function init() {
-  //////////////////////////////////////////////////////////
-  // main program - all key functions are called from here /
-  //////////////////////////////////////////////////////////
-
-  // TODO: Get the last portfolio loaded by the user - and load that 
-
-  // if investor has not set up any portfolio yet then display the DJ30 stocks
-  stocks = ["AAPL", "AXP", "BA", "CAT", "CRM", "CSCO", "CVX", "DIS", "DOW", "GS", 
-    "HD", "HON", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD", "MMM", "MRK", "MSFT", 
-    "NKE", "PG", "TRV", "UNH", "V", "VZ", "WBA", "WMT", "XOM"
-  ]
-
-  // NB we are passing and empty string as the portfolio name as no portfolio loaded - we are simply displaying
-  // DJ30 stocks
-  displayData(stocks, proxyPortfolio);
-
+  // If the investor has not loaded a portfolio yet, show the Dow 30
   hideElements();
-
+  displayData(DJ30, proxyPortfolio);
+  drawHeatmap(DJ30);
 }
 
 function hideElements() {
-  const elementsToHide = document.querySelectorAll('.portfolio');
-
-  elementsToHide.forEach(element => {
-    element.style.display = 'none';
-  });
+  document.querySelectorAll('.portfolio').forEach(el => { el.style.display = 'none'; });
 }
 
 function showElements() {
-  const elementsToShow = document.querySelectorAll('.portfolio');
-
-  elementsToShow.forEach(element => {
-    element.style.display = 'block';
-  });
+  document.querySelectorAll('.portfolio').forEach(el => { el.style.display = 'block'; });
 }
 
+function setStatus(message) {
+  const el = document.getElementById('data-status');
+  if (!el) return;
+  el.textContent = message || '';
+  el.style.display = message ? 'block' : 'none';
+}
 
 async function displayData(stocks, portfolioName) {
-  // Displays data to the screen whenever the portfolio changes, including charts
-  // and portfolio holdings (if an investor portfolio is currently loaded)
+  // Redraws everything that depends on the selected portfolio
+  addTitle(portfolioName);
+  setStatus('Loading prices…');
 
-  var answer;
-  var timeSeriesData = [];
-  var portfolio = {};
+  let history;
+  try {
+    history = await getHistory(stocks);
+  } catch (err) {
+    console.error(err);
+    setStatus('Could not load prices right now (' + err.message + '). Try again in a minute.');
+    return;
+  }
 
-  // Remove the current thumbnail images as they need to be defined for the selected portfolio
-  $("#thumbnail img").remove();
+  const missing = stocks.filter(s => !history[s]);
+  setStatus(missing.length ? 'No price data for: ' + missing.join(', ') : '');
 
-  // Remove the current Equity Curve, this needs to be redrawn for the current portfolio
-  $("#viz svg").remove();
+  drawSparklines(history, stocks);
 
-  await Promise.all(stocks.map(async function(value, index) {
-    answer = await sendRequest(value, timeSeriesData);
-    }));
-    
-    // dont call these functions if the page has just loaded as the investor has not yet selected a portfolio to analyse/value
-    if (portfolioName !== proxyPortfolio) {
-
-      portfolio = await getValuation(timeSeriesData, portfolioName); // this is the investors portfolio they wish to show, this call will retrieve the daily closing prices so we can build an equity curve
-      const labels = Object.keys(portfolio);
-      const values = Object.values(portfolio);
-
-      // function call to draw equity curve
-      drawEquityCurve(portfolio);
-
-      var holdings = getHoldings(portfolioName, timeSeriesData);
-
-      createHoldingsTable(holdings)
-
-    }
-      // Adds title to page
-      addTitle(portfolioName);
+  if (portfolioName !== proxyPortfolio) {
+    const timeSeriesData = toTimeSeries(history);
+    drawEquityCurve(getValuation(timeSeriesData, portfolioName));
+    createHoldingsTable(getHoldings(portfolioName, timeSeriesData));
+  }
 }
 
 function addTitle(portfolioName) {
@@ -666,4 +510,9 @@ const showAlert = async (title, msg, iconType, showCancelButton, confirmButtonTe
   return result.isConfirmed;
 }
 
-init();
+// Run once every script on the page (incl. heatmap.js) has loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
