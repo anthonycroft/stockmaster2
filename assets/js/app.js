@@ -137,6 +137,7 @@ async function displayData(stocks, label, transactions) {
       renderTransactions([]);
       drawHeatmap([], { title: `${label} Heatmap` });
       updateSummary(label, {});
+      setTapeHoldings([]);
     }
     return;
   }
@@ -173,6 +174,7 @@ async function displayData(stocks, label, transactions) {
       weights: holdingWeights(holdings),
     });
     updateSummary(label, holdings);
+    setTapeHoldings(Object.keys(holdings));
   }
 }
 
@@ -207,6 +209,7 @@ function showMarketView() {
   displayData(DJ30, MARKET_LABEL);
   drawHeatmap(DJ30);
   updateSummary(MARKET_LABEL, null);
+  setTapeHoldings([]);
   updateFormState();
 }
 

@@ -32,25 +32,8 @@
         <span class="vs-detail" id="vs-detail">Market view</span>
       </div>
     </div>
-    <div class="tape tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-        {
-          "symbols": [
-            { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
-            { "proName": "FOREXCOM:NSXUSD", "title": "US 100" },
-            { "proName": "FX_IDC:EURUSD", "title": "EUR/USD" },
-            { "proName": "FX_IDC:GBPUSD", "title": "GBP/USD" },
-            { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" },
-            { "proName": "BITSTAMP:ETHUSD", "title": "Ethereum" }
-          ],
-          "showSymbolLogo": true,
-          "colorTheme": "light",
-          "isTransparent": true,
-          "displayMode": "regular",
-          "locale": "en"
-        }
-      </script>
+    <div class="tape" id="tape" role="region" aria-label="Market prices, delayed">
+      <div class="tape-track" id="tape-track"></div>
     </div>
   </header>
 
@@ -259,6 +242,7 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/script.js"></script>
   <script src="assets/js/heatmap.js"></script>
+  <script src="assets/js/tape.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/news.js"></script>
 
