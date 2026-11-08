@@ -56,7 +56,7 @@ async function handleError(err) {
 // API rows -> the shape the valuation code uses
 function toClientTx(row) {
   return { id: row.id, stock: row.ticker, date: row.trade_date,
-           quantity: row.quantity, price: row.price, notes: row.notes };
+           quantity: row.quantity, price: row.price, fees: row.fees || 0, notes: row.notes };
 }
 
 // ---------------------------------------------------------------------------
@@ -148,7 +148,7 @@ async function displayData(stocks, label, transactions) {
     setStatus('No transactions yet. Add one using the form.');
     if (transactions) {
       drawEquityCurve({});
-      createHoldingsTable({});
+      createHoldingsTable({}, {});
       renderTransactions([]);
       drawHeatmap([], { title: `${label} Heatmap` });
       updateSummary(label, {}, []);
@@ -182,7 +182,7 @@ async function displayData(stocks, label, transactions) {
     const timeSeriesData = toTimeSeries(history);
     const holdings = getHoldings(transactions, timeSeriesData);
     drawEquityCurve(getValuation(timeSeriesData, transactions));
-    createHoldingsTable(holdings);
+    createHoldingsTable(holdings, computePositions(transactions));
     renderTransactions(transactions);
     drawHeatmap(Object.keys(holdings), {
       title: `${label} Heatmap`,
@@ -198,7 +198,7 @@ async function displayData(stocks, label, transactions) {
 function renderTransactions(transactions) {
   const rows = [...transactions].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
   if (!rows.length) {
-    $('#tx-rows').html('<tr><td colspan="8" class="text-muted">No transactions yet.</td></tr>');
+    $('#tx-rows').html('<tr><td colspan="9" class="text-muted">No transactions yet.</td></tr>');
     return;
   }
   $('#tx-rows').html(rows.map(t => {
@@ -210,6 +210,7 @@ function renderTransactions(transactions) {
       <td class="text-right">${shares(Math.abs(t.quantity))}</td>
       <td class="text-right">${money(t.price)}</td>
       <td class="text-right">${money(Math.abs(t.quantity) * t.price)}</td>
+      <td class="text-right">${t.fees ? money(t.fees) : '<span class="text-muted">&ndash;</span>'}</td>
       <td class="tx-notes">${esc(t.notes || '')}</td>
       <td class="text-right text-nowrap">
         <button type="button" class="btn btn-sm btn-link p-1 tx-edit" title="Edit" aria-label="Edit"><i class="fa fa-pencil"></i></button>
@@ -364,7 +365,7 @@ function setSide(side) {
 }
 
 function clearForm() {
-  $('#stock, #stock-amount, #price, #datepicker, #notes').val('');
+  $('#stock, #stock-amount, #price, #fees, #datepicker, #notes').val('');
   setSide('buy');
 }
 
@@ -376,6 +377,7 @@ function startEdit(id) {
   $('#stock').val(t.stock);
   $('#stock-amount').val(Math.abs(t.quantity));
   $('#price').val(t.price);
+  $('#fees').val(t.fees ? t.fees : '');
   $('#datepicker').datepicker('setDate', moment(t.date).toDate());
   $('#notes').val(t.notes || '');
   $('#submit-transaction').text('Save changes');
@@ -398,6 +400,8 @@ async function submitTransaction() {
   const ticker = $.trim($('#stock').val()).toUpperCase();
   const amount = parseFloat($('#stock-amount').val());
   const price = parseFloat($('#price').val());
+  const feesText = $.trim($('#fees').val());
+  const fees = feesText === '' ? 0 : parseFloat(feesText);
   const side = $("input[name='side']:checked").val();
   const date = $('#datepicker').datepicker('getDate');
 
@@ -405,6 +409,7 @@ async function submitTransaction() {
   if (!/^[A-Z0-9.\-]{1,12}$/.test(ticker)) problem = 'Enter a valid ticker, e.g. AAPL.';
   else if (!(amount > 0)) problem = 'Enter the number of shares as a positive number.';
   else if (!(price > 0)) problem = 'Enter the price per share as a positive number.';
+  else if (!(fees >= 0)) problem = 'Fees must be zero or a positive number.';
   else if (!date) problem = 'Choose the date of the trade.';
   if (problem) return showAlert('Check the transaction', problem, 'warning', false);
 
@@ -413,6 +418,7 @@ async function submitTransaction() {
     trade_date: moment(date).format('YYYY-MM-DD'),
     quantity: side === 'sell' ? -amount : amount,
     price,
+    fees,
     notes: $.trim($('#notes').val()),
   };
 

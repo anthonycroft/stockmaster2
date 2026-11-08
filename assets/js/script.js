@@ -165,13 +165,16 @@ function computePositions(transactions, upToDate) {
     .forEach(t => {
       const p = positions[t.stock] ||
         (positions[t.stock] = { name: t.stock, quantity: 0, avgCost: 0, realised: 0, invested: 0 });
+      const fees = Number(t.fees) || 0;
       if (t.quantity > 0) {
-        p.avgCost = (p.avgCost * p.quantity + t.price * t.quantity) / (p.quantity + t.quantity);
+        // Purchase fees are part of the cost of the shares
+        const cost = t.price * t.quantity + fees;
+        p.avgCost = (p.avgCost * p.quantity + cost) / (p.quantity + t.quantity);
         p.quantity += t.quantity;
-        p.invested += t.price * t.quantity;
+        p.invested += cost;
       } else {
-        // Realised gain/loss on a sale = proceeds - average cost of the shares sold
-        p.realised += -t.quantity * (t.price - p.avgCost);
+        // Realised gain/loss on a sale = proceeds, less sale fees, less average cost of the shares sold
+        p.realised += -t.quantity * (t.price - p.avgCost) - fees;
         p.quantity += t.quantity;
         if (p.quantity <= 1e-9) { p.quantity = 0; p.avgCost = 0; }
       }
@@ -224,88 +227,62 @@ function getHoldings(transactions, timeSeriesData) {
   return stocks;
 }
 
-function createHoldingsTable (holdings) {
-  // Loop over the stocks object and generate HTML code for each row
-  const options = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
-    
-  // accumulate totals as we loop over the transactions
-  var formattedValueTotal = 0;
-  var formattedAvgCostTotal = 0;
-  var formattedGainLossTotal = 0;
-  var formattedGainLossPercentOverall = 0;
+function createHoldingsTable(holdings, positions) {
+  // Open positions (largest first), then fully sold positions with their realised P&L
+  const fmt = n => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const units = n => Number(n).toLocaleString('en-US', { maximumFractionDigits: 4 });
+  const cls = n => (n < 0 ? 'negative' : '');
+  const dash = '<span class="text-muted">&ndash;</span>';
+  positions = positions || {};
 
-  clearHoldings();
+  const open = Object.values(holdings).map(h => {
+    const value = h.price == null ? null : h.price * h.quantity;
+    const cost = h.avgCost * h.quantity;
+    return { ...h, value, cost,
+             unrealised: value == null ? null : value - cost,
+             realised: (positions[h.name] || {}).realised || 0 };
+  }).sort((a, b) => (b.value || 0) - (a.value || 0));
+  const closed = Object.values(positions)
+    .filter(p => p.quantity === 0 && !holdings[p.name])
+    .sort((a, b) => a.name.localeCompare(b.name));
 
-  $.each(holdings, function (symbol, stock) {
+  const totalValue = open.reduce((t, h) => t + (h.value || 0), 0);
+  const totalCost = open.reduce((t, h) => t + (h.value == null ? 0 : h.cost), 0);
+  const totalUnreal = totalValue - totalCost;
+  const totalReal = Object.values(positions).reduce((t, p) => t + p.realised, 0);
 
-    var formattedValue = (stock.price * stock.quantity)
-    formattedValue = formattedValue.toLocaleString('en-US', options);
-    formattedValueTotal += (stock.price * stock.quantity);
-    
-    var formattedAvgCost = stock.avgCost * stock.quantity;
-    formattedAvgCost = formattedAvgCost.toLocaleString('en-US', options);
-    formattedAvgCostTotal += (stock.avgCost * stock.quantity)
+  const rows = open.map(h => `<tr>
+      <td class="ticker">${h.name}</td>
+      <td class="text-right">${units(h.quantity)}</td>
+      <td class="text-right">${h.price == null ? 'n/a' : fmt(h.price)}</td>
+      <td class="text-right">${h.value == null ? 'n/a' : fmt(h.value)}</td>
+      <td class="text-right">${h.value == null || !totalValue ? dash : (h.value / totalValue * 100).toFixed(1) + '%'}</td>
+      <td class="text-right">${fmt(h.cost)}</td>
+      <td class="text-right ${cls(h.unrealised)}">${h.unrealised == null ? dash : fmt(h.unrealised)}</td>
+      <td class="text-right ${cls(h.unrealised)}">${h.unrealised == null || !h.cost ? dash : (h.unrealised / h.cost * 100).toFixed(2)}</td>
+      <td class="text-right ${cls(h.realised)}">${h.realised ? fmt(h.realised) : dash}</td>
+    </tr>`).concat(closed.map(p => `<tr class="closed">
+      <td class="ticker">${p.name} <span class="badge badge-light">Sold</span></td>
+      <td class="text-right">0</td>
+      <td class="text-right">${dash}</td><td class="text-right">${dash}</td><td class="text-right">${dash}</td>
+      <td class="text-right">${dash}</td><td class="text-right">${dash}</td><td class="text-right">${dash}</td>
+      <td class="text-right ${cls(p.realised)}">${fmt(p.realised)}</td>
+    </tr>`));
 
-    var gainLossRaw = (stock.price * stock.quantity) -  (stock.avgCost * stock.quantity);
-    var formattedGainLoss = gainLossRaw;
-    formattedGainLoss = formattedGainLoss.toLocaleString('en-US', options);
-    formattedGainLossTotal += ((stock.price * stock.quantity) -  (stock.avgCost * stock.quantity));
-
-    var formattedGainLossPercent = (((stock.price * stock.quantity) - (stock.avgCost * stock.quantity)) / (stock.avgCost * stock.quantity)) * 100
-    formattedGainLossPercent = formattedGainLossPercent.toLocaleString('en-US', options);
-
-    // create the HTML elements - rows of the Holdings table
-    const html = '<div class="row-stocks">' +
-      '<div class="col-stocks ticker">' + stock.name + '</div>' +
-      '<div class="col-stocks">' + stock.quantity + '</div>' +
-      '<div class="col-stocks">' + (stock.price === null ? 'n/a' : stock.price.toLocaleString('en-US', options)) + '</div>' +
-      '<div class="col-stocks">' + formattedValue + '</div>' +   // value
-      '<div class="col-stocks">' + formattedAvgCost + '</div>' +
-      '<div class="col-stocks gainloss"><span class="' + (gainLossRaw < 0 ? 'negative' : '') + '">' + formattedGainLoss + '</span></div>' +
-      '<div class="col-stocks gainlossperc"><span class="' + (gainLossRaw < 0 ? 'negative' : '') + '">' + formattedGainLossPercent + '</span></div>' +
-      '</div>';
-
-    // Add the HTML code to the stocks table
-    $('#stocks-table').append(html);
-  
-  });
-
-  // update the table totals
-  $('#total-value').text(formattedValueTotal.toLocaleString('en-US', options));
-  $('#total-cost').text(formattedAvgCostTotal.toLocaleString('en-US', options));
-  $('#total-gain-loss').text(formattedGainLossTotal.toLocaleString('en-US', options));
-
-  formattedGainLossPercentOverall = (formattedGainLossTotal / formattedAvgCostTotal) * 100
-  formattedGainLossPercentOverall = formattedGainLossPercentOverall.toLocaleString('en-US', options)
-  $('#total-gain-loss-percentage').text(formattedGainLossPercentOverall);
-
-  $('#total-gain-loss, #total-gain-loss-percentage').toggleClass('negative', formattedGainLossTotal < 0);
-
-  function colorNegativesRed() {
-    // changes negative values in holdings table to red
-  
-    // get all the value, gainloss, and gainlossperc cells
-    let gainlossCells = document.querySelectorAll('.col-stocks.gainloss span');
-    let gainlosspercCells = document.querySelectorAll('.col-stocks.gainlossperc span');
-  
-    // loop through each gainloss cell and add the .negative class if the value is negative
-    gainlossCells.forEach(function(cell) {
-      if (cell.textContent < 0) {
-        cell.classList.add('negative');
-      }
-    });
-  
-    // loop through each gainlossperc cell and add the .negative class if the value is negative
-    gainlosspercCells.forEach(function(cell) {
-      if (cell.textContent < 0) {
-        cell.classList.add('negative');
-      }
-    });
-  }
+  $('#stocks-table').html(rows.join('') ||
+    '<tr><td colspan="9" class="text-muted">No holdings yet.</td></tr>');
+  $('#holdings-total').html(open.length || closed.length ? `<tr>
+      <td class="ticker">Total</td><td></td><td></td>
+      <td class="text-right">${fmt(totalValue)}</td>
+      <td class="text-right">${totalValue ? '100%' : ''}</td>
+      <td class="text-right">${fmt(totalCost)}</td>
+      <td class="text-right ${cls(totalUnreal)}">${fmt(totalUnreal)}</td>
+      <td class="text-right ${cls(totalUnreal)}">${totalCost ? (totalUnreal / totalCost * 100).toFixed(2) : ''}</td>
+      <td class="text-right ${cls(totalReal)}">${totalReal ? fmt(totalReal) : '<span class="text-muted">&ndash;</span>'}</td>
+    </tr>` : '');
 }
 
 function clearHoldings() {
-  // clears the Holdings table before it is rebuilt
-  $('#stocks-table').empty();
+  $('#stocks-table, #holdings-total').empty();
 }
 

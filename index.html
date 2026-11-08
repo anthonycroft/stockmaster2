@@ -59,27 +59,23 @@
         <div class="mt-4 portfolio">
           <h4 class="mb-3">Holdings</h4>
           <div class="table-scroll">
-            <div class="flex-grid holdings">
-              <div class="row-stocks header">
-                <div class="col-h">Stock</div>
-                <div class="col-h">Units Held</div>
-                <div class="col-h">Price ($)</div>
-                <div class="col-h">Value ($)</div>
-                <div class="col-h">Cost ($)</div>
-                <div class="col-h">Gain/Loss ($)</div>
-                <div class="col-h">Gain/Loss (%)</div>
-              </div>
-              <div id="stocks-table"></div>
-              <div class="row-stocks totals">
-                <div class="col-totals ticker">Total</div>
-                <div class="col-totals" id="total-units"></div>
-                <div class="col-totals"></div>
-                <div class="col-totals" id="total-value"></div>
-                <div class="col-totals" id="total-cost"></div>
-                <div class="col-totals" id="total-gain-loss"></div>
-                <div class="col-totals" id="total-gain-loss-percentage"></div>
-              </div>
-            </div>
+            <table class="table table-sm holdings-table mb-0">
+              <thead>
+                <tr>
+                  <th>Stock</th>
+                  <th class="text-right">Units</th>
+                  <th class="text-right">Price ($)</th>
+                  <th class="text-right">Value ($)</th>
+                  <th class="text-right">% of portfolio</th>
+                  <th class="text-right">Cost ($)</th>
+                  <th class="text-right">Unrealised ($)</th>
+                  <th class="text-right">Unrealised (%)</th>
+                  <th class="text-right">Realised ($)</th>
+                </tr>
+              </thead>
+              <tbody id="stocks-table"></tbody>
+              <tfoot id="holdings-total"></tfoot>
+            </table>
           </div>
           <dl class="pnl-summary" id="pnl-summary"></dl>
         </div>
@@ -92,7 +88,7 @@
                 <tr>
                   <th>Date</th><th>Type</th><th>Stock</th>
                   <th class="text-right">Shares</th><th class="text-right">Price ($)</th>
-                  <th class="text-right">Value ($)</th><th>Notes</th><th class="text-right">Actions</th>
+                  <th class="text-right">Value ($)</th><th class="text-right">Fees ($)</th><th>Notes</th><th class="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody id="tx-rows"></tbody>
@@ -175,6 +171,14 @@
                     <div class="input-group-prepend"><span class="input-group-text">$</span></div>
                     <input type="number" inputmode="decimal" min="0" step="any" class="form-control" aria-label="Price per share" placeholder="Price" id="price">
                   </div>
+                </div>
+                <div class="form-group">
+                  <label for="fees" class="input-heading">Fees <span class="font-weight-normal text-muted">(optional)</span></label>
+                  <div class="input-group">
+                    <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                    <input type="number" inputmode="decimal" min="0" step="any" class="form-control" aria-label="Fees" placeholder="Commission, stamp duty" id="fees">
+                  </div>
+                  <small class="form-text text-muted">Added to the cost of a purchase, or deducted from the proceeds of a sale.</small>
                 </div>
                 <div class="form-group">
                   <label for="datepicker" class="input-heading">Date</label>

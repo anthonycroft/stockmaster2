@@ -414,3 +414,28 @@ fieldset:disabled .btn-group-toggle .btn { opacity: .5; }
 .pnl-item dd.gain { color: #1a7f37; }
 .pnl-item dd.loss { color: #d1242f; }
 .pnl-item dd.pnl-note { font-size: .75rem; color: #6c757d; }
+
+/* ---------- Holdings table ---------- */
+
+.holdings-table { min-width: 760px; font-variant-numeric: tabular-nums; }
+.holdings-table thead th {
+  background-color: rgb(10, 59, 88);
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 600;
+  border: 0;
+  vertical-align: bottom;
+}
+.holdings-table td { vertical-align: middle; font-weight: 600; }
+.holdings-table tbody tr:nth-child(even) { background-color: #f6f7f9; }
+.holdings-table .negative { color: #d1242f; }
+.holdings-table tr.closed td { color: #6c757d; font-weight: 400; }
+.holdings-table tr.closed td.ticker { color: #6c757d; }
+.holdings-table tr.closed td.negative { color: #d1242f; }
+.holdings-table tfoot td {
+  background: #ebecf6;
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+  font-weight: 700;
+}
+.tx-table { min-width: 720px; }
