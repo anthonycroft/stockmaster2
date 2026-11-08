@@ -545,3 +545,5 @@ a:hover { color: var(--accent-strong); }
 .side-toggle .btn-outline-danger { color: #C2362F; border-color: #C2362F; }
 .side-toggle .btn-outline-danger:not(:disabled):not(.disabled).active,
 .side-toggle .btn-outline-danger:hover { background: #C2362F; border-color: #C2362F; color: #fff; }
+.btn-primary.disabled, .btn-primary:disabled { background: var(--accent); border-color: var(--accent); opacity: .45; }
+.btn-outline-primary:disabled { color: var(--accent); border-color: var(--accent); }
