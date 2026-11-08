@@ -551,12 +551,12 @@ a:hover { color: var(--accent-strong); }
 /* ---------- Tinted cards: a darker shade of the page, entry form stays white ---------- */
 
 :root {
-  --card: #E4E9E1;          /* darker shade of the page background */
-  --card-border: #D3DBCF;
-  --tile: #F3F5F0;          /* inner tiles, lighter than their card */
-  --tile-border: #D3DBCF;
-  --table-head: #D8DFD4;
-  --row-line: #D3DAD0;
+  --card: #E9ECE6;          /* a shade darker than the page, only faintly green */
+  --card-border: #DADFD6;
+  --tile: #F5F6F3;          /* inner tiles, lighter than their card */
+  --tile-border: #D9DED5;
+  --table-head: #DFE3DB;
+  --row-line: #D9DED5;
   --ink-muted: #55625C;     /* darker grey for contrast on tinted cards */
 }
 
@@ -576,10 +576,10 @@ a:hover { color: var(--accent-strong); }
 .holdings-table thead th, .tx-table thead th { background: var(--table-head); color: var(--ink-muted); border-bottom-color: var(--row-line); }
 .holdings-table td, .tx-table td { border-top-color: var(--row-line); }
 .holdings-table tbody tr:hover, .tx-table tbody tr:hover { background: rgba(255, 255, 255, .45); }
-.holdings-table tfoot td { background: var(--table-head); border-top-color: #B9C4B4; }
+.holdings-table tfoot td { background: var(--table-head); border-top-color: #C3CBBE; }
 .mv-row { border-bottom-color: var(--row-line); }
 .mv-row:hover { background: rgba(255, 255, 255, .45); }
-.mv-bar { background: #CFD7CB; }
+.mv-bar { background: #D6DBD2; }
 
 /* Neutral heatmap cells and the equity area need a touch more weight on the tint */
 .heat-cell { background: #F3F5F0; }
