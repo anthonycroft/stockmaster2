@@ -239,3 +239,12 @@ html, body {
 @media (max-width: 575.98px) {
   .equity-svg text { font-size: 20px; } /* viewBox shrinks text on phones */
 }
+
+/* ---------- Transactions table ---------- */
+
+.tx-table { min-width: 640px; font-variant-numeric: tabular-nums; }
+.tx-table th { font-size: .8rem; color: #6c757d; border-top: 0; }
+.tx-table td { vertical-align: middle; }
+.tx-notes { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #6c757d; font-size: .85rem; }
+
+fieldset:disabled .btn-group-toggle .btn { opacity: .5; }

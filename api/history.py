@@ -170,3 +170,9 @@ class handler(BaseHTTPRequestHandler):  # Vercel's Python runtime looks for this
         self.send_header("Server-Timing", f"fetch;dur={(time.monotonic() - t0) * 1000:.0f}")
         self.end_headers()
         self.wfile.write(payload)
+
+
+def app(method, path, headers, body):
+    """Same endpoint in the (status, headers, body) form used by dev_server.py."""
+    status, payload = build_response(parse_qs(urlparse(path).query))
+    return status, {"Content-Type": "application/json"}, json.dumps(payload).encode("utf-8")
