@@ -17,6 +17,19 @@
 </head>
 
 <body>
+  <!-- Shared chart gradients: strongest just under the line, fading to nothing -->
+  <svg class="chart-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="fade-up" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1D6B57" stop-opacity="0.32" />
+        <stop offset="100%" stop-color="#1D6B57" stop-opacity="0" />
+      </linearGradient>
+      <linearGradient id="fade-down" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#C2362F" stop-opacity="0.28" />
+        <stop offset="100%" stop-color="#C2362F" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+  </svg>
   <header class="site-header">
     <div class="masthead">
       <a class="brand" href="/" aria-label="Stockmaster home">

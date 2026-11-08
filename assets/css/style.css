@@ -590,3 +590,14 @@ a:hover { color: var(--accent-strong); }
 /* Borderless cards that blend into the page; P&L boxes on the card colour */
 .panel, .panel.panel-form { border: 0; }
 .pnl-item { background: transparent; border-color: var(--card-border); }
+
+/* Gradient fills under chart lines (gradients defined once in index.html) */
+.chart-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.spark-area.up, .equity-area.up { fill: url(#fade-up); }
+.spark-area.down, .equity-area.down { fill: url(#fade-down); }
+.equity-line.up { stroke: #1D6B57; }
+.equity-line.down { stroke: #C2362F; }
+.equity-line { stroke-width: 2; stroke-linejoin: round; }
+.spark-line { stroke-linejoin: round; }
+.spark-line.up { stroke: #1D6B57; }
+.spark-line.down { stroke: #C2362F; }

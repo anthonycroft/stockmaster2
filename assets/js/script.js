@@ -98,12 +98,15 @@ function drawEquityCurve(valuations) {
     .attr("transform", `translate(${dim.left},0)`)
     .call(d3.axisLeft(y).ticks(3).tickFormat(d3.format(",.0f")));
 
+  // Green if the portfolio is up over the period, red if down
+  const up = data[data.length - 1].equity >= data[0].equity;
+
   svg.append("path")
-    .attr("class", "equity-area")
+    .attr("class", "equity-area " + (up ? "up" : "down"))
     .attr("d", d3.area().x(d => x(d.date)).y0(y(minVal - pad)).y1(d => y(d.equity))(data));
 
   svg.append("path")
-    .attr("class", "equity-line")
+    .attr("class", "equity-line " + (up ? "up" : "down"))
     .attr("d", d3.line().x(d => x(d.date)).y(d => y(d.equity))(data));
 }
 
