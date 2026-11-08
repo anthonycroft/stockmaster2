@@ -81,6 +81,49 @@ function addTitle(label) {
   $('span.portfolio_header').text(label);
 }
 
+// Header summary: what's being viewed, and for a portfolio its value and gain against cost
+function updateSummary(name, holdings) {
+  $('#vs-name').text(name);
+  const detail = $('#vs-detail').empty();
+  if (!holdings) {
+    detail.text('Market view');
+    return;
+  }
+  let value = 0, cost = 0, priced = 0;
+  Object.values(holdings).forEach(h => {
+    if (h.price == null) return;
+    value += h.price * h.quantity;
+    cost += h.avgCost * h.quantity;
+    priced++;
+  });
+  if (!priced) {
+    detail.text(Object.keys(holdings).length ? 'Prices unavailable' : 'No holdings yet');
+    return;
+  }
+  const gain = value - cost;
+  const pct = cost ? (gain / cost) * 100 : 0;
+  const sign = gain >= 0 ? '+' : '\u2212';
+  detail.append($('<span class="vs-value">').text('$' + money(value)));
+  detail.append(document.createTextNode('  '));
+  detail.append($('<span>').addClass(gain >= 0 ? 'gain' : 'loss')
+    .text(`${sign}$${money(Math.abs(gain))} (${sign}${Math.abs(pct).toFixed(2)}%)`));
+  detail.append(document.createTextNode(' against cost'));
+}
+
+// Weight of each held stock in the portfolio's current value
+function holdingWeights(holdings) {
+  const values = {};
+  let total = 0;
+  Object.values(holdings).forEach(h => {
+    if (h.price == null) return;
+    values[h.name] = h.price * h.quantity;
+    total += values[h.name];
+  });
+  const weights = {};
+  Object.keys(values).forEach(t => { weights[t] = total ? values[t] / total : 0; });
+  return weights;
+}
+
 async function displayData(stocks, label, transactions) {
   const token = ++state.renderToken;
   addTitle(label);
@@ -92,6 +135,8 @@ async function displayData(stocks, label, transactions) {
       drawEquityCurve({});
       createHoldingsTable({});
       renderTransactions([]);
+      drawHeatmap([], { title: `${label} Heatmap` });
+      updateSummary(label, {});
     }
     return;
   }
@@ -104,7 +149,10 @@ async function displayData(stocks, label, transactions) {
     if (token !== state.renderToken) return;
     console.error(err);
     setStatus('Could not load prices right now (' + err.message + '). Try again in a minute.');
-    if (transactions) renderTransactions(transactions);
+    if (transactions) {
+      renderTransactions(transactions);
+      updateSummary(label, getHoldings(transactions, []));
+    }
     return;
   }
   if (token !== state.renderToken) return; // a newer selection has taken over
@@ -115,9 +163,16 @@ async function displayData(stocks, label, transactions) {
 
   if (transactions) {
     const timeSeriesData = toTimeSeries(history);
+    const holdings = getHoldings(transactions, timeSeriesData);
     drawEquityCurve(getValuation(timeSeriesData, transactions));
-    createHoldingsTable(getHoldings(transactions, timeSeriesData));
+    createHoldingsTable(holdings);
     renderTransactions(transactions);
+    drawHeatmap(Object.keys(holdings), {
+      title: `${label} Heatmap`,
+      note: 'Price change over roughly the last month for the stocks you hold, largest positions first.',
+      weights: holdingWeights(holdings),
+    });
+    updateSummary(label, holdings);
   }
 }
 
@@ -150,6 +205,8 @@ function showMarketView() {
   state.transactions = [];
   hideElements();
   displayData(DJ30, MARKET_LABEL);
+  drawHeatmap(DJ30);
+  updateSummary(MARKET_LABEL, null);
   updateFormState();
 }
 
@@ -513,7 +570,6 @@ function wireEvents() {
 function init() {
   wireEvents();
   showMarketView();
-  drawHeatmap(DJ30);
   if (getAccessKey()) {
     startUnlocked();
   } else {

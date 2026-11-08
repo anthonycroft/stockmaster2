@@ -11,52 +11,46 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
   <!-- our styles last so they win over Bootstrap's -->
   <link rel="stylesheet" href="assets/css/style.css" />
-  <title>My Portfolio</title>
+  <title>Stockmaster</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preload" href="assets/fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin />
 </head>
 
 <body>
-  <header>
-    <div class="jumbotron jumbotron-fluid pt-0 pb-4 mb-4">
-      <div class="tradingview-widget-container">
-        <div class="tradingview-widget-container__widget pt-0"></div>
-        <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/markets/" rel="noopener" target="_blank"><span class="blue-text">Markets today</span></a> </div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-          {
+  <header class="site-header">
+    <div class="masthead">
+      <a class="brand" href="/" aria-label="Stockmaster home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="1" y="1" width="30" height="30" rx="7" />
+          <path d="M7 22 L13 15 L18 18 L25 9" />
+          <circle cx="25" cy="9" r="2.2" />
+        </svg>
+        <span class="brand-name">Stockmaster</span>
+      </a>
+      <div class="view-summary" id="view-summary" aria-live="polite">
+        <span class="vs-name" id="vs-name">Dow 30</span>
+        <span class="vs-detail" id="vs-detail">Market view</span>
+      </div>
+    </div>
+    <div class="tape tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+        {
           "symbols": [
-            {
-              "proName": "FOREXCOM:SPXUSD",
-              "title": "S&P 500"
-            },
-            {
-              "proName": "FOREXCOM:NSXUSD",
-              "title": "US 100"
-            },
-            {
-              "proName": "FX_IDC:EURUSD",
-              "title": "EUR/USD"
-            },
-            {
-              "proName": "BITSTAMP:BTCUSD",
-              "title": "Bitcoin"
-            },
-            {
-              "proName": "BITSTAMP:ETHUSD",
-              "title": "Ethereum"
-            }
+            { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
+            { "proName": "FOREXCOM:NSXUSD", "title": "US 100" },
+            { "proName": "FX_IDC:EURUSD", "title": "EUR/USD" },
+            { "proName": "FX_IDC:GBPUSD", "title": "GBP/USD" },
+            { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" },
+            { "proName": "BITSTAMP:ETHUSD", "title": "Ethereum" }
           ],
-            "showSymbolLogo": true,
-            "colorTheme": "light",
-            "isTransparent": false,
-            "displayMode": "adaptive",
-            "locale": "en"
-          }
-        </script>
-      </div>
-      
-      <div class="container">
-        <h1 class="display-4 site-title">My Portfolio Tracker</h1>
-        <p class="lead">Keep track of your portfolio.</p>
-      </div>
+          "showSymbolLogo": true,
+          "colorTheme": "light",
+          "isTransparent": true,
+          "displayMode": "compact",
+          "locale": "en"
+        }
+      </script>
     </div>
   </header>
 
@@ -123,8 +117,8 @@
         </div>
 
         <div class="mt-4">
-          <h4 class="mb-1">Dow 30 Heatmap</h4>
-          <p class="small text-muted mb-2">Price change over roughly the last month. Tap a stock for details.</p>
+          <h4 class="mb-1" id="heatmap-title">Dow 30 Heatmap</h4>
+          <p class="small text-muted mb-2" id="heatmap-note">Price change over roughly the last month. Tap a stock for details.</p>
           <div class="heat-map"></div>
         </div>
 

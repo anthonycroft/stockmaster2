@@ -4,16 +4,98 @@ html, body {
   overflow-x: hidden; /* never scroll sideways */
 }
 
-.jumbotron {
-  padding-top: 0 !important;
+/* ---------- Fonts (self-hosted, SIL Open Font License) ---------- */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("../fonts/bricolage-grotesque-latin-400-normal.woff2") format("woff2");
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("../fonts/bricolage-grotesque-latin-600-normal.woff2") format("woff2");
+  font-weight: 600; font-display: swap;
+}
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("../fonts/bricolage-grotesque-latin-800-normal.woff2") format("woff2");
+  font-weight: 800; font-display: swap;
 }
 
-.site-title {
-  font-size: clamp(2rem, 6vw, 3.5rem);
+/* ---------- Header ---------- */
+
+:root {
+  --ledger: #123D33;       /* deep ledger green */
+  --ledger-deep: #0C2E26;
+  --brass: #C9A227;
+  --paper: #F2F4EF;
+  --gain-on-dark: #9BE3B5;
+  --loss-on-dark: #FF9A8B;
 }
 
-.display-4, .lead {
-  text-align: center;
+.site-header {
+  margin-bottom: 1.5rem;
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+}
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem 1.5rem;
+  padding: 14px clamp(16px, 3vw, 32px);
+  background: var(--ledger);
+  color: var(--paper);
+  border-bottom: 3px solid var(--brass);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--paper);
+  text-decoration: none !important;
+}
+.brand:hover, .brand:focus { color: #fff; }
+.brand:focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; border-radius: 6px; }
+
+.brand-mark { width: 34px; height: 34px; flex: none; }
+.brand-mark rect { fill: var(--ledger-deep); stroke: var(--brass); stroke-width: 1.5; }
+.brand-mark path { fill: none; stroke: var(--brass); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.brand-mark circle { fill: var(--brass); }
+
+.brand-name {
+  font-weight: 800;
+  font-size: clamp(1.45rem, 3.2vw, 1.9rem);
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+/* What you're looking at: portfolio name, value and gain against cost */
+.view-summary {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .25rem 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.vs-name { font-weight: 600; font-size: 1.05rem; }
+.vs-detail { font-size: .95rem; color: rgba(242, 244, 239, .78); }
+.vs-detail .vs-value { color: var(--paper); font-weight: 600; }
+.vs-detail .gain { color: var(--gain-on-dark); font-weight: 600; }
+.vs-detail .loss { color: var(--loss-on-dark); font-weight: 600; }
+
+.tape {
+  background: #fff;
+  border-bottom: 1px solid #e3e6ea;
+  min-height: 46px;
+}
+.tape .tradingview-widget-copyright { display: none; }
+
+@media (max-width: 575.98px) {
+  .masthead { padding: 12px 16px; }
+  .view-summary { width: 100%; }
 }
 
 .page-wrapper {
@@ -25,9 +107,7 @@ html, body {
 }
 
 .portfolio_header {
-  font-size: 1.5rem;
-  color: #0b5ed7;
-  text-transform: uppercase;
+  display: none; /* the header bar now shows which portfolio is being viewed */
 }
 
 .negative {
@@ -168,7 +248,7 @@ html, body {
 
 .heat-map {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
   gap: 4px;
 }
 
@@ -190,13 +270,11 @@ html, body {
 .heat-ticker { font-weight: 700; font-size: 1rem; }
 .heat-change { font-size: .8rem; }
 
-@media (max-width: 767.98px) {
+@media (max-width: 575.98px) {
   .heat-map { grid-template-columns: repeat(3, 1fr); }
 }
 
-@media (min-width: 768px) and (max-width: 991.98px) {
-  .heat-map { grid-template-columns: repeat(5, 1fr); }
-}
+.heat-weight { font-size: .72rem; opacity: .8; }
 
 /* ---------- News ---------- */
 
