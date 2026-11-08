@@ -586,3 +586,7 @@ a:hover { color: var(--accent-strong); }
 .equity-area { fill: rgba(29, 107, 87, .16); }
 .tx-table .badge-success { background: var(--accent); }
 .tx-table .badge-danger { background: #C2362F; }
+
+/* Borderless cards that blend into the page; P&L boxes on the card colour */
+.panel, .panel.panel-form { border: 0; }
+.pnl-item { background: transparent; border-color: var(--card-border); }

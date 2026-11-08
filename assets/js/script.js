@@ -71,7 +71,9 @@ function drawEquityCurve(valuations) {
     return;
   }
 
-  const dim = { width: 800, height: 320, top: 16, right: 16, bottom: 32, left: 84 };
+  // Short and wide on desktop; proportionally taller on narrow screens so it stays legible
+  const narrow = (document.getElementById('viz').clientWidth || 800) < 540;
+  const dim = { width: 800, height: narrow ? 330 : 170, top: 10, right: 16, bottom: narrow ? 40 : 28, left: 84 };
 
   const svg = d3.select("#viz").append("svg")
     .attr("viewBox", `0 0 ${dim.width} ${dim.height}`)
@@ -94,7 +96,7 @@ function drawEquityCurve(valuations) {
 
   svg.append("g")
     .attr("transform", `translate(${dim.left},0)`)
-    .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(",.0f")));
+    .call(d3.axisLeft(y).ticks(3).tickFormat(d3.format(",.0f")));
 
   svg.append("path")
     .attr("class", "equity-area")
