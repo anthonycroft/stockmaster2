@@ -3,7 +3,8 @@
 Each endpoint module defines plain functions such as get(req) / post(req) and
 then exposes them with:
 
-    handler = make_handler(get=get, post=post)     # what Vercel calls
+    class handler(make_handler(get=get, post=post)):  # what Vercel calls
+        pass
     dev_app = make_app(get=get, post=post)         # what dev_server.py calls
 
 (Not named `app`: Vercel would treat that as a WSGI/ASGI application.)

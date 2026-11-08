@@ -19,4 +19,5 @@ def post(req):
 
 
 dev_app = make_app(post=post)
-handler = make_handler(post=post)
+class handler(make_handler(post=post)):  # Vercel looks for a class named 'handler'
+    pass

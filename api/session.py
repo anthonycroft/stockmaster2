@@ -17,4 +17,5 @@ def get(req):
 
 
 dev_app = make_app(get=get)
-handler = make_handler(get=get)
+class handler(make_handler(get=get)):  # Vercel looks for a class named 'handler'
+    pass

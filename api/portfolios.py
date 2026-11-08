@@ -32,4 +32,5 @@ def delete(req):
 
 
 dev_app = make_app(get=get, post=post, patch=patch, delete=delete)
-handler = make_handler(get=get, post=post, patch=patch, delete=delete)
+class handler(make_handler(get=get, post=post, patch=patch, delete=delete)):  # Vercel looks for a class named 'handler'
+    pass
