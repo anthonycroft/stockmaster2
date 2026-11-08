@@ -129,6 +129,8 @@
               <small class="form-text text-muted">If the portfolio doesn't exist it will be created.</small>
             </div>
             <button class="btn btn-primary btn-block" type="button" id="submit-portfolio">Load portfolio</button>
+            <button class="btn btn-outline-secondary btn-block mt-2" type="button" id="load-sample">Load sample portfolio</button>
+            <small class="form-text text-muted">Builds a demo portfolio called "sample" from real prices over the last month.</small>
           </div>
         </div>
 
@@ -140,20 +142,30 @@
               <input class="form-control" type="text" placeholder="Enter portfolio name" id="portfolio">
             </div>
             <div class="form-group">
+              <span class="input-heading d-block mb-2">Transaction type</span>
+              <div class="btn-group btn-group-toggle w-100 side-toggle" role="radiogroup" aria-label="Buy or sell">
+                <label class="btn btn-outline-success w-50 active">
+                  <input type="radio" name="side" value="buy" checked> Buy
+                </label>
+                <label class="btn btn-outline-danger w-50">
+                  <input type="radio" name="side" value="sell"> Sell
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
               <label for="stock" class="input-heading">Stock Ticker (e.g. AAPL)</label>
               <input class="form-control" type="text" placeholder="Enter ticker" id="stock" autocapitalize="characters">
             </div>
             <div class="form-group">
-              <label for="stock-amount" class="input-heading">Stock Amount</label>
-              <input class="form-control" type="number" inputmode="decimal" placeholder="Number of shares" id="stock-amount">
+              <label for="stock-amount" class="input-heading">Number of Shares</label>
+              <input class="form-control" type="number" inputmode="decimal" min="0" step="any" placeholder="e.g. 10" id="stock-amount">
             </div>
             <div class="form-group">
-              <label for="price" class="input-heading">Bought/Sold Price</label>
+              <label for="price" class="input-heading">Price per Share</label>
               <div class="input-group">
                 <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                <input type="number" inputmode="decimal" class="form-control" aria-label="Price" placeholder="Price" id="price">
+                <input type="number" inputmode="decimal" min="0" step="any" class="form-control" aria-label="Price per share" placeholder="Price" id="price">
               </div>
-              <small class="form-text text-muted">Enter negative amounts for sales.</small>
             </div>
             <div class="form-group">
               <label for="datepicker" class="input-heading">Date</label>

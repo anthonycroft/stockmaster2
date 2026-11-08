@@ -155,27 +155,37 @@ function getValuation(timeSeriesData, portfolioName) {
   return portfolio;
 }
 
+// Positions from a list of transactions, optionally only those on/before a date.
+// Buys have a positive quantity, sales a negative one; price is always positive.
+// Uses the average-cost method: a buy re-averages the cost, a sale reduces the
+// units held but leaves the average cost of the remaining units unchanged.
+function computePositions(transactions, upToDate) {
+  const positions = {};
+  transactions
+    .filter(t => !upToDate || t.date <= upToDate)
+    .forEach(t => {
+      const p = positions[t.stock] || (positions[t.stock] = { name: t.stock, quantity: 0, avgCost: 0 });
+      if (t.quantity > 0) {
+        p.avgCost = (p.avgCost * p.quantity + t.price * t.quantity) / (p.quantity + t.quantity);
+        p.quantity += t.quantity;
+      } else {
+        p.quantity += t.quantity;
+        if (p.quantity <= 1e-9) { p.quantity = 0; p.avgCost = 0; }
+      }
+    });
+  return positions;
+}
+
 function getHoldings(portfolioName, timeSeriesData) {
-  // Units held, average cost and latest close for each stock in the portfolio
-  const stocks = {};
+  // Units held, average cost and latest close for each stock still held
   const transactions = getPortfolioTransactions(portfolioName);
   if (!transactions || transactions === 'none') {
-    return stocks;
+    return {};
   }
 
-  transactions.forEach(t => addStock(t.stock, t.price, t.quantity));
-
-  function addStock(symbol, cost, quantity) {
-    if (stocks[symbol]) {
-      const s = stocks[symbol];
-      const newQty = s.quantity + quantity;
-      if (newQty !== 0) {
-        s.avgCost = ((s.avgCost * s.quantity) + (cost * quantity)) / newQty;
-      }
-      s.quantity = newQty;
-    } else {
-      stocks[symbol] = { name: symbol, avgCost: cost, quantity: quantity };
-    }
+  const stocks = computePositions(transactions);
+  for (const symbol in stocks) {
+    if (stocks[symbol].quantity === 0) delete stocks[symbol]; // fully sold
   }
 
   // Latest available close (works on weekends and holidays too)
@@ -307,14 +317,22 @@ function getPortfolioStocks(portfolioName) {
 }
 
 function getPortfolioTransactions(portfolioName) {
-  // returns the transactions (stock purchases/sales) held against a paritcular
-  // portfolio name
+  // Returns the portfolio's transactions sorted by date, or 'none' if the
+  // portfolio doesn't exist. Old entries that recorded a sale as a negative
+  // *price* are converted to the current form (negative quantity).
+  const transactions = JSON.parse(localStorage.getItem(portfolioName));
+  if (!transactions) {
+    return 'none';
+  }
+  return transactions
+    .map(t => (t.price < 0 && t.quantity > 0)
+      ? { ...t, quantity: -t.quantity, price: -t.price }
+      : t)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
 
-  let transactions = 'none'
-
-  transactions = JSON.parse(localStorage.getItem(portfolioName));
-
-  return transactions;
+function savePortfolioTransactions(portfolioName, transactions) {
+  localStorage.setItem(portfolioName, JSON.stringify(transactions));
 }
 
 async function init() {
@@ -375,85 +393,82 @@ function addTitle(portfolioName) {
 $(document).ready(function() {
 
   $('#datepicker').datepicker({
-    format: 'yyyy-mm-dd'
+    format: 'yyyy-mm-dd',
+    endDate: new Date(),   // no future trades
+    autoclose: true
+  });
+
+  // Buy/Sell toggle styling (Bootstrap's own JS isn't loaded)
+  $("input[name='side']").on('change', function() {
+    $("input[name='side']").each(function() {
+      $(this).parent().toggleClass('active', this.checked);
+    });
   });
 
   $("#submit-transaction").click(function() {
-    // check that all inputs are complete
-    // did user enter portfolio name ?
+    const portfolioName = $.trim($("#portfolio").val()).toLowerCase();
+    const stock = $.trim($("#stock").val()).toUpperCase();
+    const amount = parseFloat($("#stock-amount").val());
+    const price = parseFloat($("#price").val());
+    const side = $("input[name='side']:checked").val(); // 'buy' or 'sell'
+    const date = $('#datepicker').datepicker('getDate');
 
-    let errorsFound = false;
-
-    if ($.trim($("#portfolio").val()) === "") {
-      showAlert("Required Input","You must enter a portfolio name!", 'warning', false)
-      errorsFound = true;
-    } else if ($.trim($("#stock").val()) === "") {
-      showAlert("Required Input","You must enter a value in the stock field!", 'warning', false)
-      errorsFound = true;
-    } else if ($.trim($("#stock-amount").val()) === "" || isNaN($("#stock-amount").val())) {
-      showAlert("Required Input","You must enter a value in the stock amount field!", 'warning', false)
-      errorsFound = true;
-    } else if ($("#price").val() === "" || isNaN($("#price").val())) {
-      showAlert("Required Input","You must enter a value in the price field!", 'warning', false)
-      errorsFound = true;
-    }
-
-    if (errorsFound) {
+    let problem = null;
+    if (!portfolioName) problem = "Enter a portfolio name.";
+    else if (!/^[A-Z0-9.\-]{1,12}$/.test(stock)) problem = "Enter a valid ticker, e.g. AAPL.";
+    else if (!(amount > 0)) problem = "Enter the number of shares as a positive number.";
+    else if (!(price > 0)) problem = "Enter the price per share as a positive number.";
+    else if (!date) problem = "Choose the date of the trade.";
+    else if (moment(date).isAfter(moment(), 'day')) problem = "The trade date can't be in the future.";
+    if (problem) {
+      showAlert("Check the transaction", problem, 'warning', false);
       return;
     }
 
-    const portfolioName = $.trim($("#portfolio").val()).toLowerCase();
-    const stock = $.trim($("#stock").val()).toUpperCase();
-    const quantity = Math.ceil(parseFloat($.trim($("#stock-amount").val())));
-    const price = parseFloat($("#price").val());
-    const roundedPrice = Number(price.toFixed(4));
-    const date = $('#datepicker').datepicker('getDate');
     const dateString = moment(date).format('YYYY-MM-DD');
+    let transactions = getPortfolioTransactions(portfolioName);
+    if (transactions === 'none') transactions = [];
 
-      // If all  checks complete we need to store the data
-      // See if portfolio exists in local storage
-
-    // let transactions = JSON.parse($.jStorage.get(portfolioName));
-    let transactions = JSON.parse(localStorage.getItem(portfolioName));
-    
-    if (!transactions) {
-      transactions = [];
+    const quantity = Number(amount.toFixed(4));
+    if (side === 'sell') {
+      const held = (computePositions(transactions, dateString)[stock] || {}).quantity || 0;
+      if (quantity > held + 1e-9) {
+        showAlert("Not enough shares",
+          `You held ${held} ${stock} on ${dateString}, so you can't sell ${quantity}.`, 'warning', false);
+        return;
+      }
     }
 
-    // call function to add new transaction to 
-    addTransaction(stock, quantity, dateString, roundedPrice)
+    transactions.push({
+      stock: stock,
+      quantity: side === 'sell' ? -quantity : quantity,
+      date: dateString,
+      price: Number(price.toFixed(4))
+    });
+    savePortfolioTransactions(portfolioName, transactions);
 
-    clearInputFields();
+    // clear the trade fields but keep the portfolio name for the next entry
+    $("#stock, #stock-amount, #price, #datepicker").val('');
 
-    showAlert("Transaction added.","This stock transaction has been added to the portfolio: " + portfolioName, 'success', false)
+    showAlert("Transaction added",
+      `${side === 'sell' ? 'Sale' : 'Purchase'} of ${quantity} ${stock} added to portfolio: ${portfolioName}`,
+      'success', false);
 
-    // refresh the display to update charts / valuation
-    const stocks = getPortfolioStocks(portfolioName);
-    displayData(stocks, portfolioName);
+    displayData(getPortfolioStocks(portfolioName), portfolioName);
     showElements();
+  });
 
-    function addTransaction(stockName, qty, date, cost) {
-
-      transactions.push({
-        stock: stockName,
-        quantity: qty,
-        date: date,
-        price: cost
-      });
-
-      localStorage.setItem(portfolioName, JSON.stringify(transactions)); 
+  $("#load-sample").click(async function() {
+    const btn = $(this).prop('disabled', true).text('Building sample…');
+    try {
+      await loadSamplePortfolio();
+    } catch (err) {
+      console.error(err);
+      showAlert("Couldn't build the sample", "Prices couldn't be loaded just now. Try again in a minute.", 'error', false);
+    } finally {
+      btn.prop('disabled', false).text('Load sample portfolio');
     }
-
-    function clearInputFields () {
-      // clears the portfolio input fields
-      
-      // $("#portfolio").val('');   
-      $("#stock").val('');
-      $("#stock-amount").val('');
-      $("#price").val('');
-      $("#datepicker").val('');
-    }
-  })
+  });
 
   $("#submit-portfolio").click(function() {
     // check that all inputs are complete
@@ -496,6 +511,50 @@ $(document).ready(function() {
     
   })
 });
+
+// ---------------------------------------------------------------------------
+// Sample portfolio - trades at real closing prices from the last few weeks,
+// so the holdings and equity curve show real numbers. Rebuilt on every click.
+// ---------------------------------------------------------------------------
+
+const SAMPLE_NAME = 'sample';
+
+async function loadSamplePortfolio() {
+  const plan = [
+    // [ticker, shares, trading day index from the start of the window, side]
+    ['AAPL', 20, 0, 'buy'],
+    ['MSFT', 10, 0, 'buy'],
+    ['KO',   60, 0, 'buy'],
+    ['NVDA', 30, 2, 'buy'],
+    ['JPM',  15, 8, 'buy'],
+    ['NVDA', 10, 14, 'sell'],
+  ];
+  const tickers = [...new Set(plan.map(p => p[0]))];
+  const history = await getHistory(tickers);
+
+  const transactions = [];
+  plan.forEach(([ticker, shares, dayIdx, side]) => {
+    const rows = (history[ticker] || []).slice(-22); // ~1 month of trading days
+    const row = rows[Math.min(dayIdx, rows.length - 1)];
+    if (!row) return;
+    transactions.push({
+      stock: ticker,
+      quantity: side === 'sell' ? -shares : shares,
+      date: row.date,
+      price: row.close,
+    });
+  });
+
+  if (!transactions.length) {
+    throw new Error('no prices available');
+  }
+
+  savePortfolioTransactions(SAMPLE_NAME, transactions);
+  $("#portfolio").val(SAMPLE_NAME);
+  showElements();
+  await displayData(getPortfolioStocks(SAMPLE_NAME), SAMPLE_NAME);
+  document.getElementById('30day').scrollIntoView({ behavior: 'smooth' });
+}
 
 const showAlert = async (title, msg, iconType, showCancelButton, confirmButtonText = 'OK') => {
   // Displays alerts to screen
