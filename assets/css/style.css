@@ -547,3 +547,42 @@ a:hover { color: var(--accent-strong); }
 .side-toggle .btn-outline-danger:hover { background: #C2362F; border-color: #C2362F; color: #fff; }
 .btn-primary.disabled, .btn-primary:disabled { background: var(--accent); border-color: var(--accent); opacity: .45; }
 .btn-outline-primary:disabled { color: var(--accent); border-color: var(--accent); }
+
+/* ---------- Tinted cards: a darker shade of the page, entry form stays white ---------- */
+
+:root {
+  --card: #E4E9E1;          /* darker shade of the page background */
+  --card-border: #D3DBCF;
+  --tile: #F3F5F0;          /* inner tiles, lighter than their card */
+  --tile-border: #D3DBCF;
+  --table-head: #D8DFD4;
+  --row-line: #D3DAD0;
+  --ink-muted: #55625C;     /* darker grey for contrast on tinted cards */
+}
+
+.panel { box-shadow: none; }
+.panel .text-muted, .mv-sub, .mv-note, .mv-price, .pnl-item dt, .pnl-item dd.pnl-note,
+.spark-price, .news-author, .news-source, .news-date { color: var(--ink-muted) !important; }
+
+/* The transaction entry form keeps a white card so it reads as a form */
+.panel.panel-form { background: #FFFFFF; border-color: #DCE2D8; }
+
+/* Inner tiles */
+.spark-card, .pnl-item, .news-item { background: var(--tile); border-color: var(--tile-border); }
+.spark-card:hover { background: #FBFCFA; border-color: #BFC9BA; }
+#data-status { background: var(--tile); border-color: var(--tile-border) !important; }
+
+/* Tables on the tinted card */
+.holdings-table thead th, .tx-table thead th { background: var(--table-head); color: var(--ink-muted); border-bottom-color: var(--row-line); }
+.holdings-table td, .tx-table td { border-top-color: var(--row-line); }
+.holdings-table tbody tr:hover, .tx-table tbody tr:hover { background: rgba(255, 255, 255, .45); }
+.holdings-table tfoot td { background: var(--table-head); border-top-color: #B9C4B4; }
+.mv-row { border-bottom-color: var(--row-line); }
+.mv-row:hover { background: rgba(255, 255, 255, .45); }
+.mv-bar { background: #CFD7CB; }
+
+/* Neutral heatmap cells and the equity area need a touch more weight on the tint */
+.heat-cell { background: #F3F5F0; }
+.equity-area { fill: rgba(29, 107, 87, .16); }
+.tx-table .badge-success { background: var(--accent); }
+.tx-table .badge-danger { background: #C2362F; }

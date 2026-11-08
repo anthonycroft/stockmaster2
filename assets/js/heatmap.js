@@ -7,7 +7,7 @@ let _heatmapToken = 0;
 function heatColour(change) {
   if (change <= -0.05) return "#e5534b";
   if (change <= -0.01) return "#f4a3a0";
-  if (change < 0.01) return "#f2f2f2";
+  if (change < 0.01) return "#F3F5F0";
   if (change < 0.05) return "#9fdc9f";
   return "#3fa63f";
 }
