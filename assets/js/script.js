@@ -163,16 +163,39 @@ function computePositions(transactions, upToDate) {
   transactions
     .filter(t => !upToDate || t.date <= upToDate)
     .forEach(t => {
-      const p = positions[t.stock] || (positions[t.stock] = { name: t.stock, quantity: 0, avgCost: 0 });
+      const p = positions[t.stock] ||
+        (positions[t.stock] = { name: t.stock, quantity: 0, avgCost: 0, realised: 0, invested: 0 });
       if (t.quantity > 0) {
         p.avgCost = (p.avgCost * p.quantity + t.price * t.quantity) / (p.quantity + t.quantity);
         p.quantity += t.quantity;
+        p.invested += t.price * t.quantity;
       } else {
+        // Realised gain/loss on a sale = proceeds - average cost of the shares sold
+        p.realised += -t.quantity * (t.price - p.avgCost);
         p.quantity += t.quantity;
         if (p.quantity <= 1e-9) { p.quantity = 0; p.avgCost = 0; }
       }
     });
   return positions;
+}
+
+// Portfolio-level P&L: unrealised (open positions at latest price vs average
+// cost), realised (closed out by sales), and total return on money invested.
+function portfolioPnL(transactions, holdings) {
+  const positions = computePositions(transactions || []);
+  let realised = 0, invested = 0;
+  Object.values(positions).forEach(p => { realised += p.realised; invested += p.invested; });
+  let value = 0, cost = 0, priced = false;
+  Object.values(holdings || {}).forEach(h => {
+    if (h.price == null) return;
+    value += h.price * h.quantity;
+    cost += h.avgCost * h.quantity;
+    priced = true;
+  });
+  const unrealised = value - cost;
+  const total = unrealised + realised;
+  return { value, cost, unrealised, realised, total, invested, priced,
+           totalPct: invested ? (total / invested) * 100 : 0 };
 }
 
 function getHoldings(transactions, timeSeriesData) {

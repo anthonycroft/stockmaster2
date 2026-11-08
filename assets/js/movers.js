@@ -3,6 +3,17 @@
 // same delayed quotes as the ticker tape.
 
 const MOVERS_COUNT = 5;
+
+// "today" if the latest trade was today in New York, otherwise name the session
+function sessionLabel(times) {
+  const valid = (times || []).filter(Boolean);
+  if (!valid.length) return { today: true, text: '' };
+  const last = new Date(Math.max(...valid) * 1000);
+  const ny = d => d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  if (ny(last) === ny(new Date())) return { today: true, text: '' };
+  return { today: false,
+           text: last.toLocaleDateString('en-GB', { timeZone: 'America/New_York', weekday: 'short', day: 'numeric', month: 'short' }) };
+}
 const moversState = { holdings: null, token: 0 };
 
 function moverRow(symbol, q, extra) {
@@ -30,12 +41,14 @@ function holdingsSection(holdings, quotes) {
   if (!rows.length) return '';
   rows.sort((a, b) => b.q.change_pct - a.q.change_pct);
 
+  const session = sessionLabel(rows.map(r => r.q.time));
+  const title = session.today ? 'Your holdings today' : `Your holdings, last session (${session.text})`;
   const base = value - dayChange;
   const pct = base ? (dayChange / base) * 100 : 0;
   const dir = dayChange >= 0 ? 'up' : 'down';
   const sign = dayChange >= 0 ? '+' : '−';
   return `<section class="mv-section">
-    <h5 class="mv-title">Your holdings today</h5>
+    <h5 class="mv-title">${esc(title)}</h5>
     <p class="mv-total ${dir}">${sign}$${money(Math.abs(dayChange))} <span>(${sign}${Math.abs(pct).toFixed(2)}%)</span></p>
     ${rows.map(r => moverRow(r.symbol, r.q,
       `${r.move >= 0 ? '+' : '−'}$${money(Math.abs(r.move))}`)).join('')}
@@ -60,8 +73,10 @@ function dowSection(quotes) {
     ? new Date(Math.max(...times) * 1000).toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' })
     : '';
 
+  const session = sessionLabel(times);
+  const dowTitle = session.today ? 'Dow 30 today' : `Dow 30, last session (${session.text})`;
   return `<section class="mv-section">
-    <h5 class="mv-title">Dow 30 today</h5>
+    <h5 class="mv-title">${esc(dowTitle)}</h5>
     <div class="mv-breadth" title="${up} up, ${down} down${flat ? ', ' + flat + ' unchanged' : ''}">
       <div class="mv-bar">
         <span class="up" style="width:${(up / moves.length) * 100}%"></span>

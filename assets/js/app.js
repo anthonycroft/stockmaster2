@@ -81,33 +81,48 @@ function addTitle(label) {
   $('span.portfolio_header').text(label);
 }
 
-// Header summary: what's being viewed, and for a portfolio its value and gain against cost
-function updateSummary(name, holdings) {
+// Header summary: what's being viewed, and for a portfolio its value and total return
+function signed(n) { return (n >= 0 ? '+' : '\u2212') + '$' + money(Math.abs(n)); }
+
+function updateSummary(name, holdings, transactions) {
   $('#vs-name').text(name);
-  const detail = $('#vs-detail').empty();
+  const detail = $('#vs-detail').empty().removeAttr('title');
   if (!holdings) {
     detail.text('Market view');
+    renderPnlSummary(null);
     return;
   }
-  let value = 0, cost = 0, priced = 0;
-  Object.values(holdings).forEach(h => {
-    if (h.price == null) return;
-    value += h.price * h.quantity;
-    cost += h.avgCost * h.quantity;
-    priced++;
-  });
-  if (!priced) {
+  const pnl = portfolioPnL(transactions, holdings);
+  renderPnlSummary(pnl);
+  if (!pnl.priced) {
     detail.text(Object.keys(holdings).length ? 'Prices unavailable' : 'No holdings yet');
     return;
   }
-  const gain = value - cost;
-  const pct = cost ? (gain / cost) * 100 : 0;
-  const sign = gain >= 0 ? '+' : '\u2212';
-  detail.append($('<span class="vs-value">').text('$' + money(value)));
+  const sign = pnl.total >= 0 ? '+' : '\u2212';
+  detail.append($('<span class="vs-value">').text('$' + money(pnl.value)));
   detail.append(document.createTextNode('  '));
-  detail.append($('<span>').addClass(gain >= 0 ? 'gain' : 'loss')
-    .text(`${sign}$${money(Math.abs(gain))} (${sign}${Math.abs(pct).toFixed(2)}%)`));
-  detail.append(document.createTextNode(' against cost'));
+  detail.append($('<span>').addClass(pnl.total >= 0 ? 'gain' : 'loss')
+    .text(`${signed(pnl.total)} (${sign}${Math.abs(pnl.totalPct).toFixed(2)}%)`));
+  detail.append(document.createTextNode(' total return'));
+  detail.attr('title', `Unrealised ${signed(pnl.unrealised)}, realised ${signed(pnl.realised)}, ` +
+                       `on $${money(pnl.invested)} invested`);
+}
+
+// Unrealised / realised / total return, under the holdings table
+function renderPnlSummary(pnl) {
+  const el = $('#pnl-summary');
+  if (!pnl || !pnl.invested) { el.empty().hide(); return; }
+  const item = (label, amount, note) => `<div class="pnl-item">
+      <dt>${label}</dt>
+      <dd class="${amount >= 0 ? 'gain' : 'loss'}">${signed(amount)}</dd>
+      ${note ? `<dd class="pnl-note">${note}</dd>` : ''}
+    </div>`;
+  const sign = pnl.total >= 0 ? '+' : '\u2212';
+  el.html(
+    item('Unrealised', pnl.unrealised, 'Open positions vs average cost') +
+    item('Realised', pnl.realised, 'From sales, vs average cost') +
+    item('Total return', pnl.total, `${sign}${Math.abs(pnl.totalPct).toFixed(2)}% of $${money(pnl.invested)} invested`)
+  ).show();
 }
 
 // Weight of each held stock in the portfolio's current value
@@ -136,7 +151,7 @@ async function displayData(stocks, label, transactions) {
       createHoldingsTable({});
       renderTransactions([]);
       drawHeatmap([], { title: `${label} Heatmap` });
-      updateSummary(label, {});
+      updateSummary(label, {}, []);
       setTapeHoldings([]);
       setMoversHoldings(null);
     }
@@ -153,7 +168,7 @@ async function displayData(stocks, label, transactions) {
     setStatus('Could not load prices right now (' + err.message + '). Try again in a minute.');
     if (transactions) {
       renderTransactions(transactions);
-      updateSummary(label, getHoldings(transactions, []));
+      updateSummary(label, getHoldings(transactions, []), transactions);
     }
     return;
   }
@@ -174,7 +189,7 @@ async function displayData(stocks, label, transactions) {
       note: 'Price change over roughly the last month for the stocks you hold, largest positions first.',
       weights: holdingWeights(holdings),
     });
-    updateSummary(label, holdings);
+    updateSummary(label, holdings, transactions);
     setTapeHoldings(Object.keys(holdings));
     setMoversHoldings(holdings);
   }
