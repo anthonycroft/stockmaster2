@@ -33,7 +33,7 @@ _modules = {}
 
 
 def api_app(name):
-    """Load api/<name>.py once and return its app() function (or None)."""
+    """Load api/<name>.py once and return its dev_app() function (or None)."""
     if name not in _modules:
         path = API_DIR / f"{name}.py"
         if not name.replace("_", "").isalnum() or name.startswith("_") or not path.exists():
@@ -42,7 +42,7 @@ def api_app(name):
             spec = importlib.util.spec_from_file_location(f"api_{name}", path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            _modules[name] = getattr(module, "app", None)
+            _modules[name] = getattr(module, "dev_app", None)
     return _modules[name]
 
 

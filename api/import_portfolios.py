@@ -18,5 +18,5 @@ def post(req):
     return 200, store.import_portfolios(req.user_id, data.get("portfolios"), bool(data.get("replace")))
 
 
-app = make_app(post=post)
+dev_app = make_app(post=post)
 handler = make_handler(post=post)

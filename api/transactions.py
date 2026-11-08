@@ -35,5 +35,5 @@ def delete(req):
     return 200, {"deleted": int(req.arg("id"))}
 
 
-app = make_app(get=get, post=post, put=put, delete=delete)
+dev_app = make_app(get=get, post=post, put=put, delete=delete)
 handler = make_handler(get=get, post=post, put=put, delete=delete)

@@ -16,5 +16,5 @@ def get(req):
     return 200, {"ok": True, "user_id": req.user_id, "database": database.kind}
 
 
-app = make_app(get=get)
+dev_app = make_app(get=get)
 handler = make_handler(get=get)
