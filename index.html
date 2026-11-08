@@ -41,9 +41,10 @@
     <div class="row">
 
       <!-- Main content: first on phones, centre column on wide screens -->
-      <section class="col-12 col-xl-7 order-1 order-xl-2 mb-4">
-        <div class="d-flex flex-wrap align-items-baseline mb-3">
-          <h4 class="mb-0 mr-3" id="30day">30-day Performance</h4>
+      <section class="col-12 col-lg-8 mb-2">
+        <div class="panel">
+        <div class="panel-head">
+          <h4 class="panel-title" id="30day">30-day performance</h4>
           <span class="portfolio_header"></span>
         </div>
         <div id="data-status" class="alert alert-light border small" role="status" style="display:none"></div>
@@ -51,13 +52,15 @@
           <!-- sparkline cards drawn by script.js -->
         </div>
 
-        <div class="mt-4 portfolio">
-          <h4 class="mb-2">Equity Curve</h4>
+        </div>
+
+        <div class="panel portfolio">
+          <h4 class="panel-title">Equity curve</h4>
           <div id="viz"></div>
         </div>
 
-        <div class="mt-4 portfolio">
-          <h4 class="mb-3">Holdings</h4>
+        <div class="panel portfolio">
+          <h4 class="panel-title">Holdings</h4>
           <div class="table-scroll">
             <table class="table table-sm holdings-table mb-0">
               <thead>
@@ -80,8 +83,8 @@
           <dl class="pnl-summary" id="pnl-summary"></dl>
         </div>
 
-        <div class="mt-4 portfolio">
-          <h4 class="mb-3">Transactions</h4>
+        <div class="panel portfolio">
+          <h4 class="panel-title">Transactions</h4>
           <div class="table-scroll">
             <table class="table table-sm tx-table mb-0">
               <thead>
@@ -96,35 +99,32 @@
           </div>
         </div>
 
-        <div class="mt-4">
-          <h4 class="mb-1" id="heatmap-title">Dow 30 Heatmap</h4>
+        <div class="panel">
+          <h4 class="panel-title mb-1" id="heatmap-title">Dow 30 Heatmap</h4>
           <p class="small text-muted mb-2" id="heatmap-note">Price change over roughly the last month. Tap a stock for details.</p>
           <div class="heat-map"></div>
         </div>
 
-        <div class="mt-4 mb-3">
-          <h4 class="mb-3">Finance News <small class="text-muted">(sample articles)</small></h4>
+        <div class="panel">
+          <h4 class="panel-title">Finance news <small class="text-muted">(sample articles)</small></h4>
           <ul class="news-list pl-0"></ul>
         </div>
       </section>
 
       <!-- Portfolio management: right column on wide screens -->
-      <aside class="col-12 col-md-6 col-xl-3 order-2 order-xl-3 mb-4">
-        <h4 class="mb-3">My Portfolios</h4>
-
+      <aside class="col-12 col-lg-4 mb-4" aria-label="Portfolios and market movers">
         <!-- shown until the access key has been entered on this device -->
-        <div class="card mb-3" id="locked-panel">
-          <div class="card-body">
+        <div class="panel" id="locked-panel">
+            <h4 class="panel-title">My portfolios</h4>
             <p class="mb-3">Your portfolios are private. Enter your access key to view and edit them.</p>
             <button class="btn btn-primary btn-block" type="button" id="unlock">Unlock portfolios</button>
-          </div>
         </div>
 
         <div id="portfolio-panel" style="display:none">
-          <div class="card mb-3">
-            <div class="card-body">
+          <div class="panel">
+              <h4 class="panel-title">My portfolios</h4>
               <div class="form-group mb-2">
-                <label for="portfolio-select" class="input-heading">Portfolio</label>
+                <label for="portfolio-select" class="input-heading sr-only">Portfolio</label>
                 <select class="form-control" id="portfolio-select"></select>
               </div>
               <div class="btn-group btn-group-sm w-100 mb-2" role="group" aria-label="Portfolio actions">
@@ -139,12 +139,10 @@
                 <span id="import-local-text"></span>
                 <button class="btn btn-sm btn-info btn-block mt-2" type="button" id="import-local-btn">Import them</button>
               </div>
-            </div>
           </div>
 
-          <h5 class="mb-2" id="tx-form-title">Add a transaction</h5>
-          <div class="card">
-            <div class="card-body">
+          <div class="panel">
+              <h4 class="panel-title" id="tx-form-title">Add a transaction</h4>
               <fieldset id="tx-form">
                 <div class="form-group">
                   <span class="input-heading d-block mb-2">Transaction type</span>
@@ -191,18 +189,20 @@
                 <button class="btn btn-primary btn-block" type="button" id="submit-transaction">Add transaction</button>
                 <button class="btn btn-link btn-block mt-1" type="button" id="cancel-edit" style="display:none">Cancel editing</button>
               </fieldset>
-            </div>
           </div>
 
-          <button class="btn btn-link btn-sm mt-2 px-0 text-muted" type="button" id="lock">Lock portfolios on this device</button>
+          <button class="btn btn-link btn-sm mb-3 px-0 text-muted" type="button" id="lock">Lock portfolios on this device</button>
         </div>
+
+        <!-- Market movers: below the portfolio tools -->
+        <div class="panel">
+          <h4 class="panel-title" id="movers-heading">Market movers</h4>
+          <div id="movers"><p class="text-muted small">Loading prices…</p></div>
+        </div>
+
       </aside>
 
-      <!-- Market movers: left column on wide screens, last on phones -->
-      <aside class="col-12 col-md-6 col-xl-2 order-3 order-xl-1 mb-4" aria-labelledby="movers-heading">
-        <h4 class="mb-3" id="movers-heading">Market movers</h4>
-        <div id="movers"><p class="text-muted small">Loading prices…</p></div>
-      </aside>
+
 
     </div>
   </main>

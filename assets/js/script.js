@@ -71,7 +71,7 @@ function drawEquityCurve(valuations) {
     return;
   }
 
-  const dim = { width: 800, height: 320, top: 16, right: 16, bottom: 32, left: 64 };
+  const dim = { width: 800, height: 320, top: 16, right: 16, bottom: 32, left: 84 };
 
   const svg = d3.select("#viz").append("svg")
     .attr("viewBox", `0 0 ${dim.width} ${dim.height}`)

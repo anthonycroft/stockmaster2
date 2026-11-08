@@ -439,3 +439,109 @@ fieldset:disabled .btn-group-toggle .btn { opacity: .5; }
   font-weight: 700;
 }
 .tx-table { min-width: 720px; }
+
+/* =====================================================================
+   Theme: off-white page, content in cards, ledger-green accent
+   ===================================================================== */
+
+:root {
+  --page: #F1F3EE;          /* pale, faintly green off-white */
+  --card: #FFFFFF;
+  --card-border: #E1E5DD;
+  --ink: #1E2A26;           /* body text, green-tinted charcoal */
+  --ink-muted: #66736D;
+  --accent: #1D6B57;        /* ledger green for actions and links */
+  --accent-strong: #15513F;
+  --accent-tint: #E4EFE9;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+}
+
+a { color: var(--accent); }
+a:hover { color: var(--accent-strong); }
+
+.page-wrapper { padding: 0 max(15px, 2vw); }
+
+/* Cards */
+.panel {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(18, 61, 51, .05);
+  padding: 18px 20px 20px;
+  margin-bottom: 16px;
+}
+.panel-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem 1rem; margin-bottom: 14px; }
+.panel-head .panel-title { margin-bottom: 0; }
+.panel-title {
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.panel-title small { font-family: system-ui, sans-serif; font-size: .8rem; font-weight: 400; }
+@media (max-width: 575.98px) {
+  .panel { padding: 14px 14px 16px; border-radius: 10px; }
+}
+
+/* Inner tiles stay flat inside cards */
+.spark-card { border-color: var(--card-border); border-radius: 8px; box-shadow: none; }
+.spark-card:hover { border-color: #C9D2C6; box-shadow: none; background: #FAFBF8; }
+.news-item { border-color: var(--card-border); border-radius: 8px; }
+.pnl-item { border-color: var(--card-border); border-radius: 8px; background: #FAFBF8; }
+.heat-cell { border-radius: 6px; }
+
+/* Buttons and form controls in the accent */
+.btn-primary { background: var(--accent); border-color: var(--accent); }
+.btn-primary:hover, .btn-primary:focus { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn-primary:not(:disabled):not(.disabled):active { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn-outline-primary { color: var(--accent); border-color: var(--accent); }
+.btn-outline-primary:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-link { color: var(--accent); }
+.form-control { border-color: #D3D9CF; }
+.form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 .2rem rgba(29, 107, 87, .18); }
+.btn:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.input-heading { font-weight: 600; font-size: .9rem; }
+.alert-info { background: var(--accent-tint); border-color: #C6DDD2; color: var(--accent-strong); }
+.btn-info { background: var(--accent); border-color: var(--accent); }
+
+/* Tables: light headers in place of the old navy bar */
+.holdings-table thead th,
+.tx-table thead th {
+  background: #F6F8F3;
+  color: var(--ink-muted);
+  font-size: .78rem;
+  font-weight: 600;
+  border-top: 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.holdings-table td, .tx-table td { border-top-color: #EDF0EA; }
+.holdings-table tbody tr:nth-child(even) { background: transparent; }
+.holdings-table tbody tr:hover, .tx-table tbody tr:hover { background: #FAFBF8; }
+.holdings-table tfoot td {
+  background: #F6F8F3;
+  border-top: 1px solid #C9D2C6;
+  border-bottom: 0;
+}
+.ticker { color: var(--accent); }
+.holdings-table .negative { color: #C2362F; }
+
+/* Equity curve in the accent */
+.equity-area { fill: rgba(29, 107, 87, .12); }
+.equity-line { stroke: var(--accent); }
+
+/* Status messages */
+#data-status { background: #F6F8F3; border-color: var(--card-border) !important; color: var(--ink-muted); }
+
+/* Buy/Sell toggle in the palette */
+.side-toggle .btn-outline-success { color: var(--accent); border-color: var(--accent); }
+.side-toggle .btn-outline-success:not(:disabled):not(.disabled).active,
+.side-toggle .btn-outline-success:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.side-toggle .btn-outline-danger { color: #C2362F; border-color: #C2362F; }
+.side-toggle .btn-outline-danger:not(:disabled):not(.disabled).active,
+.side-toggle .btn-outline-danger:hover { background: #C2362F; border-color: #C2362F; color: #fff; }
