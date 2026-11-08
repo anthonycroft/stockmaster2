@@ -1,4 +1,5 @@
 {
+  "regions": ["lhr1"],
   "functions": {
     "api/*.py": {
       "includeFiles": "api/_lib/**"
