@@ -57,9 +57,7 @@ async function refreshTape() {
   const symbols = groups.flatMap(g => g.items.map(i => i.symbol));
   let quotes = tapeState.lastQuotes;
   try {
-    const resp = await fetch('/api/quotes?symbols=' + encodeURIComponent(symbols.join(',')));
-    const data = await resp.json();
-    quotes = Object.assign({}, tapeState.lastQuotes, data.quotes || {});
+    quotes = Object.assign({}, tapeState.lastQuotes, await getQuotes(symbols));
     tapeState.lastQuotes = quotes;
   } catch (err) {
     console.warn('Tape prices unavailable', err);
@@ -101,7 +99,10 @@ function setTapeHoldings(tickers) {
   refreshTape();
   if (!tapeState.timer) {
     tapeState.timer = setInterval(() => {
-      if (document.visibilityState === 'visible') refreshTape();
+      if (document.visibilityState === 'visible') {
+        refreshTape();
+        if (typeof refreshMovers === 'function') refreshMovers();
+      }
     }, TAPE_REFRESH_MS);
   }
 }

@@ -368,3 +368,33 @@ html, body {
 .tx-notes { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #6c757d; font-size: .85rem; }
 
 fieldset:disabled .btn-group-toggle .btn { opacity: .5; }
+
+/* ---------- Market movers ---------- */
+
+.mv-section { margin-bottom: 1.5rem; }
+.mv-title { font-size: 1rem; font-weight: 600; margin-bottom: .5rem; }
+.mv-sub { font-size: .8rem; color: #6c757d; margin: .9rem 0 .25rem; }
+.mv-row {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  padding: .3rem 0;
+  border-bottom: 1px solid #eef0f2;
+  color: inherit;
+  text-decoration: none !important;
+  font-variant-numeric: tabular-nums;
+  font-size: .9rem;
+}
+.mv-row:hover { color: inherit; background: #f6f7f9; }
+.mv-sym { font-weight: 700; flex: 1 1 auto; }
+.mv-price { color: #6c757d; }
+.mv-chg { min-width: 4.4em; text-align: right; font-weight: 600; }
+.mv-chg.up, .mv-total.up, .mv-breadth-text .up { color: #1a7f37; }
+.mv-chg.down, .mv-total.down, .mv-breadth-text .down { color: #d1242f; }
+.mv-total { font-size: 1.35rem; font-weight: 700; margin-bottom: .4rem; font-variant-numeric: tabular-nums; }
+.mv-total span { font-size: .9rem; font-weight: 600; }
+.mv-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #e9ecef; }
+.mv-bar .up { background: #3fa63f; }
+.mv-bar .down { background: #e5534b; }
+.mv-breadth-text { font-size: .85rem; margin: .35rem 0 0; }
+.mv-note { font-size: .75rem; color: #6c757d; margin: .75rem 0 0; }

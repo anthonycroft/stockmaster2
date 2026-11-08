@@ -47,3 +47,23 @@ function toTimeSeries(history) {
   }
   return out;
 }
+
+// Latest prices (delayed) for the tape and the market-movers panel. Shares one
+// request per symbol set, re-fetched at most every few minutes.
+const QUOTES_MAX_AGE_MS = 4.5 * 60 * 1000;
+const _quoteCache = new Map();
+
+function getQuotes(symbols) {
+  const key = [...new Set(symbols.map(s => s.toUpperCase()))].sort().join(',');
+  const hit = _quoteCache.get(key);
+  if (hit && Date.now() - hit.at < QUOTES_MAX_AGE_MS) return hit.promise;
+  const promise = fetch('/api/quotes?symbols=' + encodeURIComponent(key))
+    .then(async resp => {
+      const body = await resp.json().catch(() => ({}));
+      if (!resp.ok && !body.quotes) throw new Error(body.error || `Quote service returned ${resp.status}`);
+      return body.quotes || {};
+    })
+    .catch(err => { _quoteCache.delete(key); throw err; });
+  _quoteCache.set(key, { at: Date.now(), promise });
+  return promise;
+}
